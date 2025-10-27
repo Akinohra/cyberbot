@@ -1,0 +1,32 @@
+{
+  "baseUrl": "ws://127.0.0.1:3001",
+  "accessToken": "123456",
+  "throwPromise": false,
+  "reconnection": {
+    "enable": true,
+    "attempts": 10,
+    "delay": 5000
+  },
+  "debug": false,
+  "bot": 123456789,
+  "master": [
+    987654321
+  ],
+  "admins": [
+    987654321
+  ],
+  "plugins": {
+    "system": [
+      "cmds"
+    ],
+    "user": [
+      "demo"
+    ]
+  },
+  "loginfo": {
+    "level": "info",
+    "maxSize": "10M",
+    "maxDays": 7,
+    "isProduction": true
+  }
+}

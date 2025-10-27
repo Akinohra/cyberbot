@@ -1,0 +1,32 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "main": "core/index.js",
+  "scripts": {
+    "dev": "tsx app.ts",
+    "build": "rimraf dist && tsc",
+    "start": "node dist/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2",
+    "cron": "^4.3.3",
+    "lru-cache": "^11.2.2",
+    "node-napcat-ts": "^0.4.20",
+    "pino": "^10.0.0",
+    "rotating-file-stream": "^3.2.7",
+    "systeminformation": "^5.27.11"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "pino-pretty": "^13.1.2",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "types": ["node"],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "**/*.ts", 
+    "cyberbot.json"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
