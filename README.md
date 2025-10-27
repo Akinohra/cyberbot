@@ -34,7 +34,7 @@ CyberBot Next 是一个基于 TypeScript 和 [NapCat](https://github.com/HkTeamX
 1. 克隆项目：
 ```bash
 git clone https://github.com/Akinohra/cyberbot.git
-cd cyberbot-next
+cd cyberbot
 ```
 
 2. 安装依赖：
@@ -123,7 +123,7 @@ export default plugin;
 ## 📁 项目结构
 
 ```
-cyberbot-next/
+cyberbot/
 ├── core/                 # 核心模块
 │   ├── event.ts          # 事件处理
 │   ├── index.ts          # 核心导出
