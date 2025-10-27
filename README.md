@@ -1,7 +1,7 @@
 # CyberBot Next - 基于 NapCat 的 QQ 机器人框架
 
 <p align="center">
-  <img src="logo.png" alt="CyberBot Logo" width="200">
+  <img src="logo.jpg" alt="CyberBot Logo" width="200">
 </p>
 
 <p align="center">
