@@ -38,7 +38,8 @@ let streams;
 
 if (isProduction) {
   // 生产环境：同时输出到文件（轮转）和 stdout（无颜色）
-  const fileStream = createStream(path.join(logDir, 'app.log'), {
+  const fileStream = createStream('app.log', {
+    path: logDir,
     size: cyberconfig.loginfo.maxSize || '10M',
     interval: '1d',
     maxFiles: cyberconfig.loginfo.maxDays || 7,

@@ -27,6 +27,6 @@
     "level": "info",
     "maxSize": "10M",
     "maxDays": 7,
-    "isProduction": true
+    "isProduction": false
   }
 }

@@ -1,4 +1,4 @@
-import { type Plugin, Structs, events, logger } from "../../core/index.js";
+import { type Plugin, Structs, events, logger, napcat } from "../../core/index.js";
 import axios from 'axios';
 
 const plugin: Plugin = {

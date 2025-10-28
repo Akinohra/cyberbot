@@ -18,6 +18,7 @@ const napcat = new NCWebsocket({
 }, cyberconfig.debug)
 
 export const bot_uin = cyberconfig.bot
+export const masters = cyberconfig.master
 
 // 创建并配置CyberBotEvents实例
 const cyberBotEvents = new CyberBotEvents(napcat);
