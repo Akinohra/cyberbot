@@ -192,7 +192,11 @@ const plugin: Plugin = {
         updateDb((data) => {
           const index = data.findIndex(([key]) => key === e.sender.user_id)
           if (index === -1) {
-            data.push([e.sender.user_id, { ...defaultItem }])
+            const newItem = { 
+              ...defaultItem,
+              lastEjaculateAt: Date.now() // 新用户第一次操作后也需要设置冷却时间
+            }
+            data.push([e.sender.user_id, newItem])
           } else {
             data[index][1].ejaculateCount++
             data[index][1].ejaculatedValue += value
@@ -230,6 +234,7 @@ const plugin: Plugin = {
             return id !== 123456789 && item.length > 6 && matchGroup // 123456789 是机器人的QQ号
           })
           .map(([id, item]) => ({ id, item }))
+          .sort((a, b) => b.item.length - a.item.length) // 按长度降序排序
 
         // 生成排行榜文本
         let rankText = '〓 牛牛排行榜 〓\n'
@@ -258,6 +263,7 @@ const plugin: Plugin = {
             return id !== 123456789 && item.injectedCount > 0 && matchGroup // 123456789 是机器人的QQ号
           })
           .map(([id, item]) => ({ id, item }))
+          .sort((a, b) => b.item.injectedCount - a.item.injectedCount) // 按注入次数降序排序
 
         // 生成排行榜文本
         let rankText = '〓 RBQ排行榜 〓\n'
@@ -315,7 +321,11 @@ const plugin: Plugin = {
           const index = newData.findIndex(([key]) => key === randomGroupUserId)
 
           if (index === -1) {
-            newData.push([randomGroupUserId, { ...defaultItem }])
+            newData.push([randomGroupUserId, { 
+              ...defaultItem,
+              injectedCount: 1,
+              injectedValue: value
+            }])
           } else {
             newData[index][1].injectedCount++
             newData[index][1].injectedValue += value
@@ -324,7 +334,14 @@ const plugin: Plugin = {
           const senderIndex = newData.findIndex(([key]) => key === e.sender.user_id)
 
           if (senderIndex === -1) {
-            newData.push([e.sender.user_id, { ...defaultItem }])
+            const newItem = {
+              ...defaultItem,
+              length: Math.round((length + defaultItem.length) * 1000) / 1000,
+              ejaculateCount: 1,
+              ejaculatedValue: value,
+              lastEjaculateAt: Date.now()
+            }
+            newData.push([e.sender.user_id, newItem])
           } else {
             newData[senderIndex][1].length = Math.round((length + newData[senderIndex][1].length) * 1000) / 1000
             newData[senderIndex][1].ejaculateCount++
@@ -412,7 +429,11 @@ const plugin: Plugin = {
           const index = newData.findIndex(([key]) => key === id)
 
           if (index === -1) {
-            newData.push([id, { ...defaultItem }])
+            newData.push([id, { 
+              ...defaultItem,
+              injectedCount: 1,
+              injectedValue: value
+            }])
           } else {
             newData[index][1].injectedCount++
             newData[index][1].injectedValue += value
@@ -421,7 +442,14 @@ const plugin: Plugin = {
           const senderIndex = newData.findIndex(([key]) => key === e.sender.user_id)
 
           if (senderIndex === -1) {
-            newData.push([e.sender.user_id, { ...defaultItem }])
+            const newItem = {
+              ...defaultItem,
+              length: Math.round((length + defaultItem.length) * 1000) / 1000,
+              ejaculateCount: 1,
+              ejaculatedValue: value,
+              lastEjaculateAt: Date.now()
+            }
+            newData.push([e.sender.user_id, newItem])
           } else {
             newData[senderIndex][1].length = Math.round((length + newData[senderIndex][1].length) * 1000) / 1000
             newData[senderIndex][1].ejaculateCount++
