@@ -231,7 +231,7 @@ const plugin: Plugin = {
         const top = dbState.data
           .filter(([id, item]) => {
             const matchGroup = isCurrentGroup ? members.includes(id) : true
-            return id !== 123456789 && item.length > 6 && matchGroup // 123456789 是机器人的QQ号
+            return item.length > 6 && matchGroup
           })
           .map(([id, item]) => ({ id, item }))
           .sort((a, b) => b.item.length - a.item.length) // 按长度降序排序
@@ -260,7 +260,7 @@ const plugin: Plugin = {
         const top = dbState.data
           .filter(([id, item]) => {
             const matchGroup = isCurrentGroup ? members.includes(id) : true
-            return id !== 123456789 && item.injectedCount > 0 && matchGroup // 123456789 是机器人的QQ号
+            return item.injectedCount > 0 && matchGroup
           })
           .map(([id, item]) => ({ id, item }))
           .sort((a, b) => b.item.injectedCount - a.item.injectedCount) // 按注入次数降序排序
