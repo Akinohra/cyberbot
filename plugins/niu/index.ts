@@ -12,6 +12,7 @@ interface ImpartItem {
   ejaculateCount: number
   lastEjaculateAt: number
   masturbateCount: number
+  charm: number // 新增的魅力值字段
 }
 
 const defaultItem: ImpartItem = {
@@ -22,6 +23,7 @@ const defaultItem: ImpartItem = {
   ejaculateCount: 0,
   lastEjaculateAt: 0,
   masturbateCount: 0,
+  charm: 0 // 初始化魅力值为0
 }
 
 const INTERVAL = 1 * 60 * 60 * 1000 // 1 hours
@@ -168,6 +170,7 @@ const plugin: Plugin = {
                `排名: ${idx + 1}/${sorted.length}\n` +
                `释放次数: ${item.ejaculateCount}\n` +
                `注入次数: ${item.injectedCount}\n` +
+               `魅力值: ${item.charm || 0}\n` +  // 显示魅力值
                `下次可操作时间: ${remainingTime}`
       }
 
@@ -314,6 +317,10 @@ const plugin: Plugin = {
 
         const length = Math.floor(Math.random() * 100 + 1) / 1000
         const value = Math.floor(Math.random() * 100) + 1
+        // 判断是否增加魅力值
+        const shouldIncreaseCharm = value > 50 && length > 0.05;
+
+
 
         updateDb((data) => {
           const newData = [...data];
@@ -329,6 +336,10 @@ const plugin: Plugin = {
           } else {
             newData[index][1].injectedCount++
             newData[index][1].injectedValue += value
+            // 如果满足条件则魅力值加1
+            if (shouldIncreaseCharm) {
+              newData[index][1].charm = (newData[index][1].charm || 0) + 1;
+            }
           }
 
           const senderIndex = newData.findIndex(([key]) => key === e.sender.user_id)
@@ -423,6 +434,11 @@ const plugin: Plugin = {
         const length = Math.floor(Math.random() * 100 + 1) / 1000
         const value = Math.floor(Math.random() * 100) + 1
 
+        // 判断是否增加魅力值
+        const shouldIncreaseCharm = value > 50 && length > 0.05;
+
+
+
         updateDb((data) => {
           const newData = [...data];
           
@@ -437,6 +453,10 @@ const plugin: Plugin = {
           } else {
             newData[index][1].injectedCount++
             newData[index][1].injectedValue += value
+            // 如果满足条件则魅力值加1
+            if (shouldIncreaseCharm) {
+              newData[index][1].charm = (newData[index][1].charm || 0) + 1;
+            }
           }
 
           const senderIndex = newData.findIndex(([key]) => key === e.sender.user_id)
