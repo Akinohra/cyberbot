@@ -157,7 +157,7 @@ const plugin: Plugin = {
       // 简化版的牛牛详情展示
       async function getNiuNiuDetailByItem(item: ImpartItem, id = e.sender.user_id, nickname = e.sender.nickname) {
         const remainingTime = nextTime(item.lastEjaculateAt)
-        const sorted = dbState.data.slice().sort((a, b) => a[1].length - b[1].length).filter(([, { length }]) => length > 6)
+        const sorted = dbState.data.slice().sort((a, b) => b[1].length - a[1].length).filter(([, { length }]) => length > 6)
         const idx = sorted.findIndex(([key]) => key === id)
         
         // 返回简化文本信息
