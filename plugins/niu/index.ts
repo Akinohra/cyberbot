@@ -1,8 +1,11 @@
+import axios from "axios";
 import { type Plugin, Structs, events, logger,napcat, masters } from "../../core/index.js";
 import fs from 'fs'
 import path from 'path'
 
 const enableGroups: number[] = []; // 启用的群号
+// 是否开启浏览器渲染
+const isRendered = false
 
 interface ImpartItem {
   length: number
@@ -155,23 +158,161 @@ const plugin: Plugin = {
       }
       
       const senderAvatar = Structs.image(getQQAvatarLink(e.sender.user_id, 160))
+      const members: number[] = []
 
       // 简化版的牛牛详情展示
-      async function getNiuNiuDetailByItem(item: ImpartItem, id = e.sender.user_id, nickname = e.sender.nickname) {
+      async function getNiuNiuDetailByItem(item: ImpartItem, id = e.sender.user_id, nickname = e.sender.nickname?? '某不知名群友') {
         const remainingTime = nextTime(item.lastEjaculateAt)
         const sorted = dbState.data.slice().sort((a, b) => b[1].length - a[1].length).filter(([, { length }]) => length > 6)
         const idx = sorted.findIndex(([key]) => key === id)
+        const totalCount = dbState.data.length // 获取总数
+
+        // isRendered
+        if(isRendered) {
+          const userInfo = {
+            userId: id,
+            nickname: nickname,
+            rank:  idx + 1,
+            percent: ((idx + 1) / totalCount * 100).toFixed(2),
+            cooldownTime: remainingTime,
+            length: item.length,
+            injectedCount: item.injectedCount,
+            ejaculateCount: item.ejaculateCount,
+            charm: item.charm || 0,
+            injectedValue: item.injectedValue,
+            ejaculatedValue: item.ejaculatedValue
+          };
+          const payload = {
+            filename: '/niu-info.vue',
+            width: 1000,     // 截图宽度
+            height: 900,     // 截图高度
+            scale: 3,        // 缩放比例
+            type: "png",     // 图片格式 (png/jpeg)
+            fullPage: true,   // 是否完整页面截图
+            props: {
+              userInfo
+            }
+          }
+          const response = await axios.post('http://127.0.0.1:65002/api/screenshot', payload, {
+            responseType: 'arraybuffer'
+          })
+          return [Structs.image(Buffer.from(await response.data))]
+
+        }
         
         // 返回简化文本信息
-        return `〓 牛牛信息 〓\n` +
+        const str = `〓 牛牛信息 〓\n` +
                `QQ: ${id}\n` +
                `昵称: ${nickname}\n` +
                `长度: ${item.length} 厘米\n` +
                `排名: ${idx + 1}/${sorted.length}\n` +
                `释放次数: ${item.ejaculateCount}\n` +
-               `注入次数: ${item.injectedCount}\n` +
+               `被透次数: ${item.injectedCount}\n` +
                `魅力值: ${item.charm || 0}\n` +  // 显示魅力值
                `下次可操作时间: ${remainingTime}`
+        return [Structs.text(str)]
+      }
+      // 获取牛牛排行榜
+      async function getNiuNiuRanking(isCurrentGroup: boolean, dbState: any) {
+
+        if (isRendered) { 
+          /**
+           *   niuRankList: {
+              userId: number
+              nickname: string
+              item: {
+                length: number
+                injectedCount: number //注入次数
+                ejaculateCount: number //释放次数
+                charm: number //魅力
+              }
+              rank: number // 排行
+              percent: number // 占比
+            }[]
+          */
+          const filtered = dbState.data
+            .filter(([id, item]: [number, ImpartItem]) => {
+              const matchGroup = isCurrentGroup ? members.includes(id) : true
+              return item.length > 6 && matchGroup
+            })
+            .map(([id, item]: [number, ImpartItem]) => ({ id, item }))
+            .sort((a: { item: ImpartItem }, b: { item: ImpartItem }) => b.item.length - a.item.length)
+              
+          const totalCount = filtered.length
+          const top20 = filtered.slice(0, 20)
+        
+          const niuRankList = top20.map((entry: { id: number, item: ImpartItem }, index: number) => ({
+            userId: entry.id,
+            nickname: String(entry.id) ?? '某不知名牛子王', // 在实际应用中应该获取真实昵称
+            item: {
+              length: entry.item.length,
+              injectedCount: entry.item.injectedCount,
+              ejaculateCount: entry.item.ejaculateCount,
+              charm: entry.item.charm || 0
+            },
+            rank: index + 1,
+            percent: totalCount > 0 ? parseFloat(((index + 1) / totalCount * 100).toFixed(2)) : 0
+          }))
+          const payload = {
+            filename: '/niu-rank.vue',
+            width: 1000,     // 截图宽度
+            height: 1200,     // 截图高度
+            scale: 3,        // 缩放比例
+            type: "png",     // 图片格式 (png/jpeg)
+            fullPage: true,   // 是否完整页面截图
+            props: {
+              niuRankList
+            }
+          }
+          const response = await axios.post('http://127.0.0.1:65002/api/screenshot', payload, {
+            responseType: 'arraybuffer'
+          })
+
+          return [Structs.image(Buffer.from(await response.data))]
+        }
+        const top = dbState.data
+          .filter(([id, item]: [number, ImpartItem]) => {
+            const matchGroup = isCurrentGroup ? members.includes(id) : true
+            return item.length > 6 && matchGroup
+          })
+          .map(([id, item]: [number, ImpartItem]) => ({ id, item }))
+          .sort((a: { item: ImpartItem }, b: { item: ImpartItem }) => b.item.length - a.item.length) // 按长度降序排序
+          .slice(0, 20)
+
+        // 生成排行榜文本
+        let rankText = '〓 牛牛排行榜 〓\n'
+        top.forEach((entry: { id: number, item: ImpartItem }, index: number) => {
+          rankText += `${index + 1}. ${entry.id} - ${entry.item.length}厘米\n`
+        })
+        
+        if (top.length === 0) {
+          rankText += '暂无数据'
+        }
+
+        return [Structs.text(rankText)]
+      }
+
+      // 获取RBQ排行榜
+      function getRbqRanking(isCurrentGroup: boolean, dbState: any) {
+        const top = dbState.data
+          .filter(([id, item]: [number, ImpartItem]) => {
+            const matchGroup = isCurrentGroup ? members.includes(id) : true
+            return item.injectedCount > 0 && matchGroup
+          })
+          .map(([id, item]: [number, ImpartItem]) => ({ id, item }))
+          .sort((a: { item: ImpartItem }, b: { item: ImpartItem }) => b.item.injectedCount - a.item.injectedCount) // 按注入次数降序排序
+
+        // 生成排行榜文本
+        let rankText = '〓 RBQ排行榜 〓\n'
+        top.slice(0, 10).forEach((entry: { id: number, item: ImpartItem }, index: number) => {
+          rankText += `${index + 1}. ${entry.id} - 被注入${entry.item.injectedCount}次\n`
+        })
+        
+        if (top.length === 0) {
+          rankText += '暂无数据'
+        }
+
+        return rankText
       }
 
       if (['赛博银趴'].includes(text)) {
@@ -226,58 +367,16 @@ const plugin: Plugin = {
       if (/^(本?群)?小?((牛牛)|(牛子))(排行)?榜$/.test(text)) {
         const isCurrentGroup = text.includes('群')
         // 群成员信息需要通过API获取
-        // 这里简化处理
-        const members: number[] = []
         
         const dbState = db.getState();
-
-        const top = dbState.data
-          .filter(([id, item]) => {
-            const matchGroup = isCurrentGroup ? members.includes(id) : true
-            return item.length > 6 && matchGroup
-          })
-          .map(([id, item]) => ({ id, item }))
-          .sort((a, b) => b.item.length - a.item.length) // 按长度降序排序
-
-        // 生成排行榜文本
-        let rankText = '〓 牛牛排行榜 〓\n'
-        top.slice(0, 10).forEach((entry, index) => {
-          rankText += `${index + 1}. ${entry.id} - ${entry.item.length}厘米\n`
-        })
-        
-        if (top.length === 0) {
-          rankText += '暂无数据'
-        }
-
+        const rankText = await getNiuNiuRanking(isCurrentGroup, dbState)
         return events.reply(e, rankText)
       }
 
       if (/^(本?群)?小?((rbq)|([男南楠蓝][娘梁凉]))(排行)?榜$/i.test(text)) {
         const isCurrentGroup = text.includes('群')
-        // 群成员信息需要通过API获取
-        // 这里简化处理
-        const members: number[] = []
-        
         const dbState = db.getState();
-
-        const top = dbState.data
-          .filter(([id, item]) => {
-            const matchGroup = isCurrentGroup ? members.includes(id) : true
-            return item.injectedCount > 0 && matchGroup
-          })
-          .map(([id, item]) => ({ id, item }))
-          .sort((a, b) => b.item.injectedCount - a.item.injectedCount) // 按注入次数降序排序
-
-        // 生成排行榜文本
-        let rankText = '〓 RBQ排行榜 〓\n'
-        top.slice(0, 10).forEach((entry, index) => {
-          rankText += `${index + 1}. ${entry.id} - 被注入${entry.item.injectedCount}次\n`
-        })
-        
-        if (top.length === 0) {
-          rankText += '暂无数据'
-        }
-
+        const rankText = getRbqRanking(isCurrentGroup, dbState)
         return events.reply(e, rankText)
       }
 

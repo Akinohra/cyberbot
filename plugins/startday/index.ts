@@ -45,6 +45,29 @@ const plugin: Plugin = {
           logger.error('Error fetching news:');
         }
     });
+    cron('0 0 18 * * *', async () => {
+        // 如果 enableGroups 为空数组，则不执行任何操作
+        if (enableGroups.length === 0) {
+          logger.info('No groups configured for morning news, skipping...');
+          return;
+        }
+        const newsApiUrl = 'https://ai-h5.vivo.com.cn/hiboard-morningpaper/index.html?pid=176199298107610a7d623964e4b19bef2263bd0750e0b&newsFrom=1&ids=&api=https://smart-feeds.vivo.com.cn&vaid=43bbc4e3f51a1cf04385c5a85924a3e921a0e674df75595d9d6b6c512f0c2cec&abShow=1&newstype=6&vivoArticleNo=V124514857582d7308cb4e6aa0b330538d2'
+        try {
+            const base64_img = await axios.post('http://192.168.10.124:65001/screenshot', {url: newsApiUrl})
+            if (base64_img.data && base64_img.data.screenshot) {
+                const base64Buffer = base64ToBuffer(base64_img.data.screenshot);
+                // 遍历 enableGroups 数组，向每个群组发送消息
+                for (const groupId of enableGroups) {
+                    napcat.send_group_msg({
+                        group_id: groupId, 
+                        message: [Structs.image(base64Buffer)]
+                    });
+                }
+            }
+        }catch (error) {
+          logger.error('Error fetching news:');
+        }
+    });
 
   }
 };
