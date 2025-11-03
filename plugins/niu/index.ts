@@ -165,7 +165,7 @@ const plugin: Plugin = {
         const remainingTime = nextTime(item.lastEjaculateAt)
         const sorted = dbState.data.slice().sort((a, b) => b[1].length - a[1].length).filter(([, { length }]) => length > 6)
         let idx = sorted.findIndex(([key]) => key === id)
-        idx = idx === -1 ? sorted.length : idx
+        idx = idx === -1 ? sorted.length - 1 : idx
 
         // isRendered
         if(isRendered) {
