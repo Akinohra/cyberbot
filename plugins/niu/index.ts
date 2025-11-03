@@ -164,7 +164,8 @@ const plugin: Plugin = {
       async function getNiuNiuDetailByItem(item: ImpartItem, id = e.sender.user_id, nickname = e.sender.nickname?? '某不知名群友') {
         const remainingTime = nextTime(item.lastEjaculateAt)
         const sorted = dbState.data.slice().sort((a, b) => b[1].length - a[1].length).filter(([, { length }]) => length > 6)
-        const idx = sorted.findIndex(([key]) => key === id)
+        let idx = sorted.findIndex(([key]) => key === id)
+        idx = idx === -1 ? sorted.length : idx
 
         // isRendered
         if(isRendered) {
