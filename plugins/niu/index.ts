@@ -185,7 +185,7 @@ const plugin: Plugin = {
           const payload = {
             filename: '/niu-info.vue',
             width: 1000,     // 截图宽度
-            height: 900,     // 截图高度
+            height: 450,     // 截图高度
             scale: 3,        // 缩放比例
             type: "png",     // 图片格式 (png/jpeg)
             fullPage: true,   // 是否完整页面截图
