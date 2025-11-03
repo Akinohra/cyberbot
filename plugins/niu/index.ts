@@ -173,7 +173,7 @@ const plugin: Plugin = {
             userId: id,
             nickname: nickname,
             rank:  idx + 1,
-            percent: ((idx + 1) / totalCount * 100).toFixed(2),
+            percent: ((totalCount - idx + 1) / (totalCount - 1) * 100).toFixed(2),
             cooldownTime: remainingTime,
             length: item.length,
             injectedCount: item.injectedCount,
@@ -214,6 +214,7 @@ const plugin: Plugin = {
       }
       // 获取牛牛排行榜
       async function getNiuNiuRanking(isCurrentGroup: boolean, dbState: any) {
+        if(!('group_id' in e)) return [Structs.text('无法获取群信息')]
 
         if (isRendered) { 
           /**
@@ -241,18 +242,23 @@ const plugin: Plugin = {
           const totalCount = filtered.length
           const top20 = filtered.slice(0, 20)
         
-          const niuRankList = top20.map((entry: { id: number, item: ImpartItem }, index: number) => ({
-            userId: entry.id,
-            nickname: String(entry.id) ?? '某不知名牛子王', // 在实际应用中应该获取真实昵称
-            item: {
-              length: entry.item.length,
-              injectedCount: entry.item.injectedCount,
-              ejaculateCount: entry.item.ejaculateCount,
-              charm: entry.item.charm || 0
-            },
-            rank: index + 1,
-            percent: totalCount > 0 ? parseFloat(((index + 1) / totalCount * 100).toFixed(2)) : 0
-          }))
+          const niuRankList = []
+          for(let index = 0; index < top20.length; index++) {
+            const entry = top20[index]
+            const memberInfo = await napcat.get_group_member_info({ group_id: e.group_id, user_id: entry.id }).catch(() => null)
+            niuRankList.push({
+              userId: entry.id,
+              nickname: memberInfo?.card || memberInfo?.nickname || '某不知名牛子王',
+              item: {
+                length: entry.item.length,
+                injectedCount: entry.item.injectedCount,
+                ejaculateCount: entry.item.ejaculateCount,
+                charm: entry.item.charm || 0
+              },
+              rank: index + 1,
+              percent: totalCount > 0 ? parseFloat(((totalCount - index + 1) / (totalCount - 1) * 100).toFixed(2)) : 0
+            })
+          }
           const payload = {
             filename: '/niu-rank.vue',
             width: 1000,     // 截图宽度
