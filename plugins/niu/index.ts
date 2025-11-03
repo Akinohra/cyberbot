@@ -165,7 +165,6 @@ const plugin: Plugin = {
         const remainingTime = nextTime(item.lastEjaculateAt)
         const sorted = dbState.data.slice().sort((a, b) => b[1].length - a[1].length).filter(([, { length }]) => length > 6)
         const idx = sorted.findIndex(([key]) => key === id)
-        const totalCount = dbState.data.length // 获取总数
 
         // isRendered
         if(isRendered) {
@@ -173,7 +172,7 @@ const plugin: Plugin = {
             userId: id,
             nickname: nickname,
             rank:  idx + 1,
-            percent: ((totalCount - idx - 1) / (totalCount - 1) * 100).toFixed(2),
+            percent: sorted.length > 1 ? (((sorted.length - idx - 1) / (sorted.length - 1)) * 100).toFixed(2) : "0",
             cooldownTime: remainingTime,
             length: item.length,
             injectedCount: item.injectedCount,
