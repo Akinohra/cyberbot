@@ -173,7 +173,7 @@ const plugin: Plugin = {
             userId: id,
             nickname: nickname,
             rank:  idx + 1,
-            percent: ((totalCount - idx + 1) / (totalCount - 1) * 100).toFixed(2),
+            percent: ((totalCount - idx - 1) / (totalCount - 1) * 100).toFixed(2),
             cooldownTime: remainingTime,
             length: item.length,
             injectedCount: item.injectedCount,
@@ -193,7 +193,7 @@ const plugin: Plugin = {
               userInfo
             }
           }
-          const response = await axios.post('http://127.0.0.1:65002/api/screenshot', payload, {
+          const response = await axios.post('http://127.0.0.1:65003/api/screenshot', payload, {
             responseType: 'arraybuffer'
           })
           return [Structs.image(Buffer.from(await response.data))]
@@ -256,7 +256,7 @@ const plugin: Plugin = {
                 charm: entry.item.charm || 0
               },
               rank: index + 1,
-              percent: totalCount > 0 ? parseFloat(((totalCount - index + 1) / (totalCount - 1) * 100).toFixed(2)) : 0
+              percent: totalCount > 0 ? parseFloat(((totalCount - index - 1) / (totalCount - 1) * 100).toFixed(2)) : 0
             })
           }
           const payload = {
@@ -270,7 +270,7 @@ const plugin: Plugin = {
               niuRankList
             }
           }
-          const response = await axios.post('http://127.0.0.1:65002/api/screenshot', payload, {
+          const response = await axios.post('http://127.0.0.1:65003/api/screenshot', payload, {
             responseType: 'arraybuffer'
           })
 
