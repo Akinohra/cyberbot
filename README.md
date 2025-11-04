@@ -10,7 +10,7 @@
 
 ## 🌟 简介
 
-CyberBot Next 是一个基于 TypeScript 和 [NapCat](https://github.com/HkTeamX/node-napcat-ts) 的现代化 QQ 机器人框架。该框架采用插件化架构，允许开发者轻松扩展机器人的功能，并提供了丰富的内置插件来满足日常需求。
+CyberBot Next 是一个基于 TypeScript 和 [NapCatQQ](https://github.com/NapNeko/NapCatQQ) 的现代化 QQ 机器人框架。该框架采用插件化架构，允许开发者轻松扩展机器人的功能，并提供了丰富的内置插件来满足日常需求。
 
 ### 特性
 
@@ -27,7 +27,8 @@ CyberBot Next 是一个基于 TypeScript 和 [NapCat](https://github.com/HkTeamX
 ### 环境要求
 
 - Node.js >= 18.x
-- NapCat 服务端 (用于连接 QQ)
+- NapCatQQ 服务端 (用于连接 QQ)
+- [NapCatQQ部署文档](https://www.napcat.wiki/)
 
 ### 安装步骤
 
@@ -49,7 +50,8 @@ npm install
   "baseUrl": "ws://127.0.0.1:3001",  // NapCat WebSocket 地址
   "accessToken": "your-access-token", // 访问令牌
   "bot": 123456789,                   // 机器人 QQ 号
-  "master": [987654321]               // 主人 QQ 号
+  "master": [987654321],               // 主人 QQ 号
+  "admins": [987654321]                 // 管理员 QQ 号
 }
 ```
 
@@ -77,12 +79,20 @@ CyberBot Next 提供了强大的插件系统，支持多种类型的插件：
 | like | 点赞插件 |
 | manage | 微群管插件 |
 | verification | 入群验证插件 |
+| chosen-one | 随即禁言插件 |
+| manage | 微群管插件 |
+| keyword | 关键词回复插件(支持图片、正则匹配) |
+| startday | 每日早报/晚报插件 |
+| derect-link | 直链获取插件 |
+| demo | 示例插件 |
+| ... | 更多插件请自行添加 |
 
 ### 开发新插件（可参照demo插件编写）
 
 1. 在 `plugins/` 目录下创建新的插件文件夹
 2. 在插件文件夹内创建 `index.ts` 文件
-3. 实现插件逻辑：
+3. 注意：代码内插件名称`name`必须与文件夹名称一致
+4. 实现插件逻辑：
 
 ```typescript
 import { type Plugin } from "../../core/index.js";
@@ -93,28 +103,77 @@ const plugin: Plugin = {
   description: 'Your plugin description',
   
   onLoad: async () => {
-    // 插件加载时执行
+    // 插件加载时执行(可不写，注释掉此函数即可)
     console.log('Plugin loaded');
   },
   
   onUnload: async () => {
-    // 插件卸载时执行
+    // 插件卸载时执行(可不写，注释掉此函数即可)
     console.log('Plugin unloaded');
   },
   
   handlers: {
     message: async (context) => {
       // 处理消息事件
+      // 收到 hello 消息时回复 Hi there!
+      if (context.raw_message === 'hello') {
+        const { message_id } = await events.reply(context, 'Hi there!', true);
+        //5s撤回
+        setTimeout(() => {
+          events.delete_msg(message_id)
+        }, 5000);
+      }
+      // 收到 love 消息时回复爱你哟和一个爱心 QQ 表情
+      if (context.raw_message === 'love') {
+        // 复杂消息消息可以使用数组组合
+        events.reply(context, ['爱你哟 ', Structs.face(66)])
+      }
+      // 收到 壁纸 消息时回复今天的 bing 壁纸
+      if (context.raw_message === '壁纸') {
+        // 第一个参数是图片的 URL，第二个参数是是否使用缓存，true 为使用缓存，false 为不使用缓存
+        events.reply(context, [Structs.image('https://p2.qpic.cn/gdynamic/m7yRCticIwlKMnXkIat8nNRyD95wf24YNBoiblNYKYdXs/0')])
+      }
+      // 收到 一言 消息时回复一言
+      if (context.raw_message === '一言') {
+        const { data } = await axios.get('https://v1.hitokoto.cn/')
+        events.reply(context, data.hitokoto)
+      }
     },
     
     notice: async (context) => {
       // 处理通知事件
+      // 处理所有请求：好友、群，添加好友、邀请入群等等
+      console.log('收到请求:', JSON.stringify(context));
+      // 群组相关请求
+      if (context.request_type === 'group') {
+        // 自动同意群邀请或加群请求
+        await events.aprroveGroupJoinRequest(context.flag, true);
+        console.log('已自动同意群组请求');
+      }
+      
+      // 好友相关请求可以在这里处理
+      if (context.request_type === 'friend') {
+        // 处理好友请求
+      }
     },
     
     request: async (context) => {
       // 处理请求事件
+      // 处理所有通知：好友、群的数量增加与减少、戳一戳、撤回，以及群的签到、禁言、管理变动、转让等等
+      console.log('收到通知:', JSON.stringify(context));
     }
-  }
+  },
+  // crons: (cron) => {
+  //   // 每分钟执行一次的任务
+  //   cron('0 * * * * *', () => {
+  //     logger.info('[Plugin1] Cron job executed: This runs every minute');
+  //   });
+    
+  //   // 每5秒执行一次的任务
+  //   cron('*/5 * * * * *', () => {
+  //     logger.info('[Plugin1] Cron job executed: This runs every 5 seconds');
+  //   });
+  // }
 };
 
 export default plugin;
@@ -195,9 +254,9 @@ npm run build
 
 ## 🙏 致谢
 
-- 感谢 [NapCat](https://github.com/HkTeamX/node-napcat-ts) 提供的 QQ 协议支持
+- 感谢 [NapCatQQ](https://github.com/NapNeko/NapCatQQ) 提供的 QQ 协议支持
 - 感谢 [node-napcat-ts](https://github.com/HkTeamX/node-napcat-ts) 提供的 TypeScript SDK
-- 参考了 kivibot 项目的设计理念
+- 参考了 [KiviBot](https://b.viki.moe/) 项目的设计理念
 
 ---
 

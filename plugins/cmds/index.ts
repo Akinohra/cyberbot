@@ -181,7 +181,7 @@ const getStatus = async (): Promise<string> => {
 }
 // 关于信息
 const getAbout = async (): Promise<string> => {
-  return "〓  🚀  CyberBot〓\n新一代QQ机器人框架\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n✦ 核心特性 ✦\n├─ 🪶 极简轻量：不依赖复杂环境，安装即用\n├─ 🎨 优雅架构：TypeScript 全栈开发，类型安全\n├─ 🧩 热插拔插件：模块化设计，功能扩展无忧\n├─ ⚡ 性能怪兽：基于 Node.js 事件驱动模型\n├─ 🌐 跨平台支持：Windows/Linux/macOS 全兼容\n\n✦ 技术架构 ✦\n└─ 🔧 底层协议：NapcatQQ 核心驱动\n└─ 🧬 开发框架：node-napcat-ts 深度整合\n└─ 📦 生态支持：npm 海量模块即插即用\n\n✦ 开发者友好 ✦\n💡 完善文档 + 示例项目 = 1分钟快速上手\n🛠️ 提供cli工具链，创建/调试/打包一气呵成\n\n✨ 开源协议：MIT License，欢迎贡献代码！";
+  return "〓  🚀  CyberBot〓\n新一代QQ机器人框架\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n✦ 核心特性 ✦\n├─ 🪶 极简轻量：不依赖复杂环境，安装即用\n├─ 🎨 优雅架构：TypeScript 全栈开发，类型安全\n├─ 🧩 热插拔插件：模块化设计，功能扩展无忧\n├─ ⚡ 性能怪兽：基于 Node.js 事件驱动模型\n├─ 🌐 跨平台支持：Windows/Linux/macOS 全兼容\n\n✦ 技术架构 ✦\n└─ 🔧 底层协议：NapcatQQ 核心驱动\n└─ 🧬 开发框架：node-napcat-ts 深度整合\n└─ 📦 生态支持：npm 海量模块即插即用\n\n✦ 开发者友好 ✦\n💡 完善文档 + 示例项目 = 1分钟快速上手\n🛠️ 提供cli工具链，创建/调试/打包一气呵成\n\n✨ 开源协议：MIT License，欢迎贡献代码！\n开源地址：https://github.com/Akinohra/cyberbot.git";
 }
 // 获取帮助信息
 const getHelp = async (): Promise<string> => {
