@@ -75,13 +75,13 @@ CyberBot Next 提供了强大的插件系统，支持多种类型的插件：
 | 插件名称 | 功能描述 |
 |---------|----------|
 | cmds | 机器人控制命令插件(系统) |
-| keyword | 关键词回复插件 |
 | like | 点赞插件 |
-| manage | 微群管插件 |
 | verification | 入群验证插件 |
 | chosen-one | 随即禁言插件 |
 | manage | 微群管插件 |
 | keyword | 关键词回复插件(支持图片、正则匹配) |
+| fabing | 发病文学插件 |
+| niu | 赛博银趴插件 |
 | startday | 每日早报/晚报插件 |
 | derect-link | 直链获取插件 |
 | demo | 示例插件 |
