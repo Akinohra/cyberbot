@@ -42,8 +42,10 @@ const plugin: Plugin = {
 };
 
 async function fetchFbMsgs(name: string) {
-  const { data } = await axios.get('https://fb.viki.moe', { params: { name } })
-  return data
+  // const { data } = await axios.get('https://fb.viki.moe', { params: { name } })
+  // return data
+    const { data} = await axios.get(`https://api.lolimi.cn/API/fabing/fb.php?name=${name}`);
+    return data.data;
 }
 
 export default plugin;
