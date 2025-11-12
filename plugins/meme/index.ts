@@ -48,11 +48,11 @@ const plugin: Plugin = {
       const quoteMsg = (await events.getQuoteMessage(context))
 
       const quoteId = quoteMsg ? quoteMsg.sender.user_id : null
-      const quoteIdAvatar = quoteId ? events.getQQAvatarLink(quoteId) : ''
-      const senderAvatar = events.getQQAvatarLink(context.sender.user_id)
+      const quoteIdAvatar = quoteId ? events.getQQAvatarLink(quoteId, 0) : ''
+      const senderAvatar = events.getQQAvatarLink(context.sender.user_id, 0)
 
       const atIds = events.getMessageAt(context)
-      const atIdAvatars = atIds.map((e) => events.getQQAvatarLink(e))
+      const atIdAvatars = atIds.map((e) => events.getQQAvatarLink(e, 0))
 
       const quoteImages = quoteMsg
         ? quoteMsg.message

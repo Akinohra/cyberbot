@@ -478,10 +478,10 @@ class CyberBotEvents {
     /**
      * 获取QQ头像链接
      * @param qq QQ号码
-     * @param size 头像尺寸，默认为40
+     * @param size 头像尺寸, 可选： 0 | 40 | 100 | 160 | 640，0 为原图
      * @returns QQ头像的URL链接
      */
-    getQQAvatarLink(qq: number, size: number = 40): string {
+    getQQAvatarLink(qq: number, size: number = 160): string {
         logger.info(`Getting QQ avatar link for QQ ${qq}`);
         return `https://q2.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=${size}`;
     }
