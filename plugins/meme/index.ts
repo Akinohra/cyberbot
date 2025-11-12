@@ -1,6 +1,6 @@
 import { type Plugin, events, napcat, Structs } from "../../core/index.js";
 import axios from 'axios'
-import list from './list.json'
+import list from './list.json' assert { type: 'json' };
 const enableGroups:number[] = [123456789];// 启用的群号
 const baseUrl = 'http://192.168.10.124:2233'
 
