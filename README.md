@@ -26,7 +26,7 @@ CyberBot Next 是一个基于 TypeScript 和 [NapCatQQ](https://github.com/NapNe
 
 ### 环境要求
 
-- Node.js >= 18.x
+- Node.js >= 22.x
 - NapCatQQ 服务端 (用于连接 QQ)
 - [NapCatQQ部署文档](https://www.napcat.wiki/)
 
