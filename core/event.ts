@@ -3,6 +3,8 @@ import logger from './logger.js'
 import fs from 'fs'
 import path from 'path'
 import { createHash } from 'crypto';
+import { string2argv as _string2argv } from 'string2argv';
+import _mri from 'mri';
 
 // 事件封装类
 class CyberBotEvents {
@@ -433,6 +435,37 @@ class CyberBotEvents {
         return array[index];
     }
     /**
+     * 确保输入值为数组。
+     * - 若为 `null` 或 `undefined`，返回空数组；
+     * - 若已是数组，原样返回；
+     * - 否则将其包装为单元素数组。
+     *
+     * @param input 任意类型的可选值
+     * @returns 输入值的数组形式
+     */
+    ensureArray<T>(input: T | T[] | null | undefined): T[] {
+        if (input == null) {
+            return [];
+        }
+        return Array.isArray(input) ? input : [input];
+    }
+    /**
+     * 将命令字符串解析为 argv 数组（支持引号、空格等）
+     * @param text 用户输入的命令文本
+     * @returns 类似 process.argv 的字符串数组（不含 node 和脚本路径）
+     */
+    string2argv(text: string): string[] {
+        return _string2argv(text);
+    }
+    /**
+     * 解析 argv 数组为带选项的对象
+     * @param argv 参数数组，如 ['cmd', 'arg', '--flag', 'value']
+     * @returns { _: string[], ...options }
+     */
+    mri(argv: string[]): { _: string[]; [key: string]: any } {
+        return _mri(argv);
+    }
+    /**
      * 获取群头像链接
      * @param group_id 群组ID
      * @param size 头像尺寸，默认为40
@@ -552,6 +585,50 @@ class CyberBotEvents {
         catch (error) {
             logger.error(`提取消息ID时发生错误:${error}`);
             return "";
+        }
+    }
+    async getQuoteMessage(context: AllHandlers['message']): Promise<({
+        message_type: "private";
+        sender: {
+            user_id: number;
+            nickname: string;
+            card: string;
+        };
+        sub_type: "friend";
+    } | {
+        message_type: "group";
+        group_id: number;
+        sender: {
+            user_id: number;
+            nickname: string;
+            card: string;
+            role: "owner" | "admin" | "member";
+        };
+        sub_type: "normal";
+    }) & {
+        self_id: number;
+        user_id: number;
+        time: number;
+        message_id: number;
+        message_seq: number;
+        real_id: number;
+        real_seq: string;
+        raw_message: string;
+        font: number;
+        post_type: "message" | "message_sent";
+    } & import("node-napcat-ts/dist/Interfaces.js").MessageType | null> {
+        try {
+            const message_id = this.getReplyMessageId(context);
+            if (!message_id) return null; // 提前返回无效情况
+            logger.info(`Getting quoted message for message ${message_id}`);
+            // @onebot11 — 获取信息
+            return this.napcat.get_msg({
+                message_id: Number(message_id)
+            });
+        }
+        catch (error) {
+            logger.error(`提取被引用的文本时发生错误:${error}`);
+            return null;
         }
     }
     /**
