@@ -151,8 +151,10 @@ class PluginManager {
         const normalizedPath = pluginPath.replace(/\\/g, '/');
         importPath = `file://${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
       }
+      // 添加时间戳参数以防止模块缓存
+      const importPathWithTimestamp = `${importPath}?update=${Date.now()}`;
       // 动态导入插件
-      const pluginModule = await import(importPath);
+      const pluginModule = await import(importPathWithTimestamp);
       const plugin: Plugin = pluginModule.default || pluginModule;
 
       // 验证插件对象
@@ -228,6 +230,18 @@ class PluginManager {
         logger.info(`System plugin ${pluginName} cannot be unloaded`);
         return false;
       }
+      // 清理模块缓存以防止内存泄漏
+      const normalizedPath = pluginPath.replace(/\\/g, '/');
+      const fileUrl = `file://${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
+      
+      // 删除可能存在的缓存版本
+      if (globalThis.require?.cache) {
+        for (const key of Object.keys(globalThis.require.cache)) {
+          if (key.startsWith(fileUrl)) {
+            delete globalThis.require.cache[key];
+          }
+        }
+      }
       const loadedPlugin = this.loadedPlugins.get(pluginPath);
       
       if (!loadedPlugin) {
@@ -278,6 +292,17 @@ class PluginManager {
       const pluginName = path.basename(pluginPath);
       logger.info(`System plugin ${pluginName} cannot be reloaded`);
       return false;
+    }
+
+    // 清除模块缓存以确保重新加载最新代码
+    const normalizedPath = pluginPath.replace(/\\/g, '/');
+    const fileUrl = `file://${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
+    
+    // 删除可能存在的缓存版本
+    for (const key of Object.keys(globalThis.require?.cache || {})) {
+      if (key.startsWith(fileUrl)) {
+        delete globalThis.require?.cache[key];
+      }
     }
     // 先卸载插件
     const unloadResult = await this.unload(pluginPath);

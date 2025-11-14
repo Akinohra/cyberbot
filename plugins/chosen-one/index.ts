@@ -1,10 +1,16 @@
 import { type Plugin, events, napcat } from "../../core/index.js";
+import { LRUCache } from 'lru-cache'
 
 const enableGroups: number[] = []; // 启用的群号
 
-// 添加一个Map来记录用户最后触发命令的时间
-const userCooldownMap = new Map();
+// 使用LRU缓存替代Map，限制最多存储1000个用户冷却记录
+const userCooldownMap = new LRUCache<number, number>({
+  max: 1000, // 最多存储1000个条目
+  ttl: 10 * 60 * 1000 // 10分钟过期时间
+});
+
 const COOLDOWN_TIME = 5 * 60 * 1000; // 5分钟的冷却时间（毫秒）
+
 // 添加多个回复语句
 const banMessages = [
     `⚡天道法则波动！[nickname]道友顿悟「闭口禅」大神通，雷劫将至，闭关banTime秒！(温馨提示：渡劫期间建议默诵《莫生气》心法)`,
@@ -33,13 +39,15 @@ const plugin: Plugin = {
             // 检查用户是否在冷却期
             if(userCooldownMap.has(userId)) {
               const lastTime = userCooldownMap.get(userId);
-              const timeElapsed = currentTime - lastTime;
-              
-              if(timeElapsed < COOLDOWN_TIME) {
-                // 计算剩余冷却时间（秒）
-                const remainingTime = Math.ceil((COOLDOWN_TIME - timeElapsed) / 1000);
-                events.reply(context, `道友刚刚施展过此神通，元气未复，请${remainingTime}秒后再试！`);
-                return;
+              if (lastTime !== undefined) {
+                const timeElapsed = currentTime - lastTime;
+                
+                if(timeElapsed < COOLDOWN_TIME) {
+                  // 计算剩余冷却时间（秒）
+                  const remainingTime = Math.ceil((COOLDOWN_TIME - timeElapsed) / 1000);
+                  events.reply(context, `道友刚刚施展过此神通，元气未复，请${remainingTime}秒后再试！`);
+                  return;
+                }
               }
             }
             // 记录用户触发时间
