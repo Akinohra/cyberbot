@@ -54,7 +54,7 @@ if (isProduction) {
     options: {
       colorize: false, // 关键：关闭颜色
       levelFirst: true,
-      translateTime: 'yyyy-mm-dd HH:MM:ss.l',
+      translateTime: 'yyyy-mm-dd HH:MM:ss',
       ignore: 'pid,name',
     },
   });
@@ -73,7 +73,7 @@ if (isProduction) {
         options: {
           colorize: true,
           levelFirst: true,
-          translateTime: 'yyyy-mm-dd HH:MM:ss.l',
+          translateTime: 'yyyy-mm-dd HH:MM:ss',
           ignore: 'pid,name',
         },
       }),
