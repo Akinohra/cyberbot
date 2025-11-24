@@ -23,6 +23,11 @@ export const masters = cyberconfig.master
 // 创建并配置CyberBotEvents实例
 const cyberBotEvents = new CyberBotEvents(napcat);
 
+// 监听所有消息事件并记录raw_message
+napcat.on('message', (context) => {
+    logger.info(`Message received: ${context.raw_message}`);
+});
+
 export { napcat, NCWebsocket, type AllHandlers, type NodeSegment, Structs, logger }
 export { pluginManager, type Plugin  } from './pluginManager.js';
 export { cyberBotEvents as events }
