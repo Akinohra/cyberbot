@@ -24,9 +24,12 @@ export const masters = cyberconfig.master
 const cyberBotEvents = new CyberBotEvents(napcat);
 
 // 监听所有消息事件并记录raw_message
-napcat.on('message', (context) => {
-    logger.info(`Message received: ${context.raw_message}`);
-});
+napcat.on('message', (ctx) => {
+  if (ctx.message_type == "group") {
+    logger.info(`[*]群(${ctx.group_id}) ${ctx.sender.nickname}(${ctx.sender.user_id}): ${ctx.raw_message}`);
+} else if (ctx.message_type == "private") {
+    logger.info(`[*]私(${ctx.sender.user_id}) ${ctx.sender.nickname}: ${ctx.raw_message}`);
+}});
 
 export { napcat, NCWebsocket, type AllHandlers, type NodeSegment, Structs, logger }
 export { pluginManager, type Plugin  } from './pluginManager.js';

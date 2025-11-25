@@ -49,7 +49,7 @@ const plugin: Plugin = {
     },
     notice: async (context) => {
       // 处理所有通知：好友、群的数量增加与减少、戳一戳、撤回，以及群的签到、禁言、管理变动、转让等等
-      console.log('收到通知:', JSON.stringify(context));
+      // console.log('收到通知:', JSON.stringify(context));
     },
   },
 

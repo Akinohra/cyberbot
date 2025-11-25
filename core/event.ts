@@ -36,20 +36,26 @@ class CyberBotEvents {
                 ? [Structs.reply(context.message_id), ...messageContent]
                 : messageContent;
             // 记录日志，显示正在回复的消息类型和目标ID
-            logger.info(`Replying to ${context.message_type} ${context.message_type === 'group' ? `${context.group_id}` : `${context.user_id}`}`);
+            // logger.info(`Replying to ${context.message_type} ${context.message_type === 'group' ? `${context.group_id}` : `${context.user_id}`}`);
             // 如果是群消息且有群ID，则发送群消息
             if (context.message_type === 'group' && context.group_id) {
-                return await this.napcat.send_group_msg({
+                const result = await this.napcat.send_group_msg({
                     group_id: context.group_id,
                     message: messageSegments,
                 });
+                // 发送成功后记录日志
+                logger.info(`[*]群(回复)(${context.group_id}) ${context.sender?.nickname ? `${context.sender.nickname}(${context.sender.user_id})` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+                return result;
             }
             // 如果是私聊消息且有用户ID，则发送私聊消息
             if (context.message_type === 'private' && context.user_id) {
-                return await this.napcat.send_private_msg({
+                const result = await this.napcat.send_private_msg({
                     user_id: context.user_id,
                     message: messageSegments,
                 });
+                // 发送成功后记录日志
+                logger.info(`[*]私(回复)(${context.user_id}) ${context.sender?.nickname ? `${context.sender.nickname}` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+                return result;
             }
             // 不支持的类型或缺少关键字段时记录警告信息
             const errorMsg = `Unsupported message context: type=${context.message_type}, group_id=${'group_id' in context ? context.group_id : 'undefined'}, user_id=${'user_id' in context ? context.user_id : 'undefined'}`;
@@ -68,7 +74,7 @@ class CyberBotEvents {
      */
     async isMaster(qq: number): Promise<boolean> {
         try {
-            logger.info(`Checking master status for QQ ${qq}`);
+            // logger.info(`Checking master status for QQ ${qq}`);
             // 读取cyberbot.json配置文件
             const config = await fs.promises.readFile(path.join(process.cwd(), 'cyberbot.json'), 'utf8');
             // 解析配置文件内容
@@ -76,7 +82,7 @@ class CyberBotEvents {
             // 检查配置中的master数组是否包含当前QQ号
             return Array.isArray(parsedConfig.master) && parsedConfig.master.includes(qq);
         } catch (error) {
-            logger.error(`Error checking master status for QQ ${qq}:${error}`);
+            // logger.error(`Error checking master status for QQ ${qq}:${error}`);
             return false;
         }
     }
@@ -87,13 +93,13 @@ class CyberBotEvents {
      */
     async isAdmin(qq: number): Promise<boolean> {
         try {
-            logger.info(`Checking admin status for QQ ${qq}`);
+            // logger.info(`Checking admin status for QQ ${qq}`);
             // 读取cyberbot.json配置文件
             const config = await fs.promises.readFile(path.join(process.cwd(), 'cyberbot.json'), 'utf8')
             // 解析配置文件内容并检查admins数组是否包含当前QQ号
             return JSON.parse(config).admins.includes(qq)
         } catch (error) {
-            logger.error(`Error checking admin status for QQ ${qq}: ${error}`)
+            // logger.error(`Error checking admin status for QQ ${qq}: ${error}`)
             return false
         }
     }
@@ -104,11 +110,11 @@ class CyberBotEvents {
      */
     async hasRight(qq: number): Promise<boolean> {
         try {
-            logger.info(`Checking rights for QQ ${qq}`);
+            // logger.info(`Checking rights for QQ ${qq}`);
             // 检查QQ号是否为机器人的主人或者机器人的管理员
             return await this.isMaster(qq) || await this.isAdmin(qq);
         } catch (error) {
-            logger.error(`Error checking rights for QQ ${qq}: ${error}`);
+            // logger.error(`Error checking rights for QQ ${qq}: ${error}`);
             return false;
         }
     }
@@ -132,10 +138,13 @@ class CyberBotEvents {
                             : seg
                     );
             // 调用napcat API发送私聊消息
-            return await this.napcat.send_private_msg({
+            const result = await this.napcat.send_private_msg({
                 user_id: user_id,
                 message: msgArray
             });
+            // 发送成功后记录日志
+            logger.info(`[*]私(发送)(${user_id}): ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+            return result;
         }
         catch (error) {
             logger.error(`Failed to send message: ${error}`);
@@ -162,10 +171,13 @@ class CyberBotEvents {
                             : seg
                     );
             // 调用napcat API发送群聊消息
-            return await this.napcat.send_group_msg({
+            const result = await this.napcat.send_group_msg({
                 group_id: group_id,
                 message: msgArray
             });
+            // 发送成功后记录日志
+            logger.info(`[*]群(发送)(${group_id}): ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+            return result;
         }catch (error) {
             logger.error(`Failed to send message: ${error}`);
             return { message_id: 0 };
