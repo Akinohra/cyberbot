@@ -19,8 +19,18 @@ const plugin: Plugin = {
       // 收到 love 消息时回复爱你哟和一个爱心 QQ 表情
       if (e.raw_message === 'love') {
         // 复杂消息消息可以使用数组组合
-        e.quick_action([Structs.text('爱你哟 '), Structs.face(66)])
-        ctx.reply(e, ['爱你哟 ', Structs.face(66)])
+        // await e.quick_action([Structs.text('爱你哟 '), Structs.face(66)])
+        await napcat.send_private_msg({
+          user_id: e.sender.user_id,
+          message: [
+            {
+               "type": "text",
+               "data": {
+                  "text": "爱你哟"
+               }
+            }]
+        });
+        // ctx.reply(e, ['爱你哟 ', Structs.face(66)])
       }
       // 收到 壁纸 消息时回复今天的 bing 壁纸
       if (e.raw_message === '壁纸') {

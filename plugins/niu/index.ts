@@ -1,5 +1,5 @@
 import axios from "axios";
-import { type Plugin, Structs, events, logger,napcat, masters } from "../../core/index.js";
+import { type Plugin, Structs, ctx, logger,napcat, masters } from "../../core/index.js";
 import fs from 'fs'
 import path from 'path'
 
@@ -322,7 +322,7 @@ const plugin: Plugin = {
       }
 
       if (['赛博银趴'].includes(text)) {
-        return events.reply(e,
+        return ctx.reply(e,
           '〓 欢迎来到赛博银趴 〓\n\n食用方法:\n\n1. 打搅/打胶: 释放你的 DNA 🧬\n2. 我的牛牛: 查看你的牛牛状态\n3. 透/草 @某人: 给某人注入 DNA 🧬\n4. 透群友: 随机糟蹋一个群友\n5. 他的牛牛/金针菇 @某人: 查看他人牛牛\n6. 群牛牛榜/牛牛榜: 查看牛牛排行榜\n\n注意: 每次释放后需要冷却 1 小时才能再次释放。',
           true,
         )
@@ -330,7 +330,7 @@ const plugin: Plugin = {
 
       if (/^打[胶搅叫脚角]$/.test(text)) {
         if (isInInterval(senderItem.lastEjaculateAt)) {
-          return events.reply(e,
+          return ctx.reply(e,
             `你已经榨不出任何东西啦，等会再来吧。杂鱼～ 杂鱼～（冷却至 ${nextTime(senderItem.lastEjaculateAt)}）`,
             true,
           )
@@ -360,14 +360,14 @@ const plugin: Plugin = {
         const updatedDbState = db.getState();
         const sender = updatedDbState.data.find(([key]) => key === e.sender.user_id)!
 
-        return events.reply(e,
+        return ctx.reply(e,
           `打胶结束，真舒服! 你释放了 ${value} 毫升 DNA 🧬！牛牛变长了 ${randomGrow} 厘米！目前长度 ${sender[1].length} 厘米。`,
           true,
         )
       }
 
       if (/^[我俺]的((牛子)|(牛牛)|(鸡鸡))$/.test(text)) {
-        return events.reply(e, await getNiuNiuDetailByItem(senderItem))
+        return ctx.reply(e, await getNiuNiuDetailByItem(senderItem))
       }
 
       if (/^(本?群)?小?((牛牛)|(牛子))(排行)?榜$/.test(text)) {
@@ -376,19 +376,19 @@ const plugin: Plugin = {
         
         const dbState = db.getState();
         const rankText = await getNiuNiuRanking(isCurrentGroup, dbState)
-        return events.reply(e, rankText)
+        return ctx.reply(e, rankText)
       }
 
       if (/^(本?群)?小?((rbq)|([男南楠蓝][娘梁凉]))(排行)?榜$/i.test(text)) {
         const isCurrentGroup = text.includes('群')
         const dbState = db.getState();
         const rankText = getRbqRanking(isCurrentGroup, dbState)
-        return events.reply(e, rankText)
+        return ctx.reply(e, rankText)
       }
 
       if (/^[透草超焯]群友$/.test(text)) {
         if (isInInterval(senderItem.lastEjaculateAt)) {
-          return events.reply(e,
+          return ctx.reply(e,
             [atSender, ` 你已经榨不出任何东西啦，杂鱼～杂鱼～（冷却至 ${nextTime(senderItem.lastEjaculateAt)})`],
             true,
           )
@@ -407,7 +407,7 @@ const plugin: Plugin = {
         const isSuccess = isMi || isSelf ? true : Math.random() < 0.8
 
         if (!isSuccess) {
-          return events.reply(e,
+          return ctx.reply(e,
             [
               senderAvatar,
               '可惜可惜 ，',
@@ -471,7 +471,7 @@ const plugin: Plugin = {
         const updatedDbState = db.getState();
         const sender = updatedDbState.data.find(([key]) => key === e.sender.user_id)!
 
-        return events.reply(e,
+        return ctx.reply(e,
           [
             targetAvatar,
             '好耶！ ',
@@ -504,14 +504,14 @@ const plugin: Plugin = {
 
       if (/^[他她它]的小?((牛子)|(牛牛)|(金针菇)|(鸡鸡))$/.test(text)) {
         // getUserProfile 需要API调用，这里简化处理
-        return events.reply(e, await getNiuNiuDetailByItem(targetItem, id, nickname))
+        return ctx.reply(e, await getNiuNiuDetailByItem(targetItem, id, nickname))
       }
 
       
       if (/^[透草超焯]$/.test(text)) {
         
         if (isInInterval(senderItem.lastEjaculateAt)) {
-          return events.reply(e,
+          return ctx.reply(e,
             [atSender, ` 你已经榨不出任何东西啦，杂鱼～杂鱼～（冷却至 ${nextTime(senderItem.lastEjaculateAt)})`],
             true,
           )
@@ -523,7 +523,7 @@ const plugin: Plugin = {
         logger.info(`${e.sender.user_id} 透 ${id}成功了吗：${isSuccess}`)
         logger.info(`${isMi} || ${isSelf}`)
         if (!isSuccess) {
-          return events.reply(e,
+          return ctx.reply(e,
             [
               senderAvatar,
               '可惜可惜 ，',
@@ -588,7 +588,7 @@ const plugin: Plugin = {
         const updatedDbState = db.getState();
         const sender = updatedDbState.data.find(([key]) => key === e.sender.user_id)!
 
-        return events.reply(e,
+        return ctx.reply(e,
           [
             targetAvatar,
             '好耶！ ',

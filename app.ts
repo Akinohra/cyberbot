@@ -1,4 +1,4 @@
-import { napcat, pluginManager, logger, events } from "./core/index.js";
+import { napcat, pluginManager, logger, ctx, setBotUin } from "./core/index.js";
 import fs from 'fs'
 import path from 'path'
 
@@ -8,6 +8,8 @@ const main = async () => {
   logger.info('Connected to NapCat');
   const config = await fs.promises.readFile(path.join(process.cwd(), 'cyberbot.json'), 'utf8')
   const cyberconfig = JSON.parse(config);
+  const bot_uin = await napcat.get_login_info().then(res => res.user_id)
+  setBotUin(bot_uin);
   const logo = `
   .oooooo.                .o8                          oooooooooo.                .   
  d8P'  \`Y8b              "888                          \`888'   \`Y8b             .o8   
@@ -23,10 +25,18 @@ CyberBot 一个基于 node-napcat-ts 的 QQ 机器人
 参考: kivibot@viki && Abot@takayama
 @auther: 星火
 `;
-logger.info(logo);
-  await events.sendPrivateMessage(cyberconfig.master[0], `[Bot🤖] 已成功上线！\n🎉 机器人已准备就绪，随时为您服务！`);
+  logger.info(logo);
+  logger.info(`${bot_uin} welcome to CyberBot`);
   // 初始化插件
   await pluginManager.initialize();
+  await napcat.send_private_msg({
+    user_id: cyberconfig.master[0],
+    message: [{
+        "type": "text",
+        "data": {
+          "text": "[Bot🤖] 已成功上线！\n🎉 机器人已准备就绪，随时为您服务！"
+        }}
+      ]});
 }
 
 main();

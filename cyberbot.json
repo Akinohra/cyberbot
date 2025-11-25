@@ -8,12 +8,10 @@
     "delay": 5000
   },
   "debug": false,
-  "bot": 2436783018,
   "master": [
     2319289456
   ],
-  "admins": [
-  ],
+  "admins": [],
   "plugins": {
     "system": [
       "cmds"

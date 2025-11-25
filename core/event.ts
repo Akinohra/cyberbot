@@ -7,7 +7,7 @@ import { string2argv as _string2argv } from 'string2argv';
 import _mri from 'mri';
 
 // 事件封装类
-class CyberBotContext {
+class CyberBote {
     private napcat: NCWebsocket
 
     constructor(napcat: NCWebsocket) {
@@ -17,12 +17,12 @@ class CyberBotContext {
     // @onebot11 — 发送私聊消息
     /**
      * 回复消息的函数
-     * @param context 消息上下文，包含消息类型、群组ID或用户ID等信息
+     * @param e 消息上下文，包含消息类型、群组ID或用户ID等信息
      * @param message 要发送的消息内容，可以是字符串、消息段数组，或字符串与消息段的混合数组
      * @returns 返回包含消息ID的Promise对象
      */
     async reply(
-        context: AllHandlers['message'],
+        e: AllHandlers['message'],
         message: (SendMessageSegment | string)[] | string,
         quote: boolean = false,
     ): Promise<{ message_id: number }> {
@@ -33,32 +33,32 @@ class CyberBotContext {
                 : message.map(seg => typeof seg === 'string' ? Structs.text(seg) : seg);
 
             const messageSegments = quote
-                ? [Structs.reply(context.message_id), ...messageContent]
+                ? [Structs.reply(e.message_id), ...messageContent]
                 : messageContent;
             // 记录日志，显示正在回复的消息类型和目标ID
-            // logger.info(`Replying to ${context.message_type} ${context.message_type === 'group' ? `${context.group_id}` : `${context.user_id}`}`);
+            // logger.info(`Replying to ${e.message_type} ${e.message_type === 'group' ? `${e.group_id}` : `${e.user_id}`}`);
             // 如果是群消息且有群ID，则发送群消息
-            if (context.message_type === 'group' && context.group_id) {
+            if (e.message_type === 'group' && e.group_id) {
                 const result = await this.napcat.send_group_msg({
-                    group_id: context.group_id,
+                    group_id: e.group_id,
                     message: messageSegments,
                 });
                 // 发送成功后记录日志
-                logger.info(`[*]群(回复)(${context.group_id}) ${context.sender?.nickname ? `${context.sender.nickname}(${context.sender.user_id})` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+                logger.info(`[*]群(回复)(${e.group_id}) ${e.sender?.nickname ? `${e.sender.nickname}(${e.sender.user_id})` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
                 return result;
             }
             // 如果是私聊消息且有用户ID，则发送私聊消息
-            if (context.message_type === 'private' && context.user_id) {
+            if (e.message_type === 'private' && e.user_id) {
                 const result = await this.napcat.send_private_msg({
-                    user_id: context.user_id,
+                    user_id: e.user_id,
                     message: messageSegments,
                 });
                 // 发送成功后记录日志
-                logger.info(`[*]私(回复)(${context.user_id}) ${context.sender?.nickname ? `${context.sender.nickname}` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
+                logger.info(`[*]私(回复)(${e.user_id}) ${e.sender?.nickname ? `${e.sender.nickname}` : ''}: ${typeof message === 'string' ? message : message.map(seg => typeof seg === 'string' ? seg : JSON.stringify(seg)).join(' ')}`);
                 return result;
             }
             // 不支持的类型或缺少关键字段时记录警告信息
-            const errorMsg = `Unsupported message context: type=${context.message_type}, group_id=${'group_id' in context ? context.group_id : 'undefined'}, user_id=${'user_id' in context ? context.user_id : 'undefined'}`;
+            const errorMsg = `Unsupported message e: type=${e.message_type}, group_id=${'group_id' in e ? e.group_id : 'undefined'}, user_id=${'user_id' in e ? e.user_id : 'undefined'}`;
             logger.warn(errorMsg);
             return { message_id: 0 };
         } catch (error) {
@@ -499,14 +499,14 @@ class CyberBotContext {
     }
     /**
      * 从消息上下文中提取第一张图片的链接
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns Promise<string> 图片链接URL，如果没有找到图片或出错则返回空字符串
      */
-    async getImageLink(context: AllHandlers['message']): Promise<string> { 
+    async getImageLink(e: AllHandlers['message']): Promise<string> { 
         try {
-            if (!Array.isArray(context.message)) return "";
+            if (!Array.isArray(e.message)) return "";
             logger.info(`Extracting image link from message`);
-            const imageItem = context.message.find(item => item.type === "image");
+            const imageItem = e.message.find(item => item.type === "image");
             return imageItem?.data?.url.trim() || "";
         }
         catch (error) {
@@ -560,20 +560,20 @@ class CyberBotContext {
     }
     /**
      * 获取图片的临时直链地址，会过期
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns Promise<string>  替换rkey后的直链URL，失败时返回空字符串
      */
-    async getTemporaryDirectLink(context: AllHandlers['message']): Promise<string>{
+    async getTemporaryDirectLink(e: AllHandlers['message']): Promise<string>{
         try {
-            const message_id = this.getReplyMessageId(context);
+            const message_id = this.getReplyMessageId(e);
             if (!message_id) return ""; // 提前返回无效情况
             // @onebot11 — 获取信息
-            const new_context = await this.napcat.get_msg({
+            const new_e = await this.napcat.get_msg({
                 message_id: Number(message_id)
             });
-            if (!Array.isArray(new_context.message)) return "";
+            if (!Array.isArray(new_e.message)) return "";
             logger.info(`Extracting image link from message`);
-            const imageItem = new_context.message.find(item => item.type === "image");
+            const imageItem = new_e.message.find(item => item.type === "image");
             logger.info(`Image item: ${imageItem?.data?.url.trim()}`);
             return imageItem?.data?.url.trim() || "";
         }
@@ -584,14 +584,14 @@ class CyberBotContext {
     }
     /**
      * 从消息上下文中提取回复消息的ID
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns 回复消息的ID，如果没有找到回复对象或出错则返回空字符串
      */
-    getReplyMessageId(context: AllHandlers['message']): string {
+    getReplyMessageId(e: AllHandlers['message']): string {
         try {
-            if (!Array.isArray(context.message)) return "";
+            if (!Array.isArray(e.message)) return "";
             logger.info(`Extracting reply message ID from message`);
-            const replyObj = context.message.find(item => item.type === "reply");
+            const replyObj = e.message.find(item => item.type === "reply");
             return replyObj?.data?.id.trim() || "";
         }
         catch (error) {
@@ -599,7 +599,7 @@ class CyberBotContext {
             return "";
         }
     }
-    async getQuoteMessage(context: AllHandlers['message']): Promise<({
+    async getQuoteMessage(e: AllHandlers['message']): Promise<({
         message_type: "private";
         sender: {
             user_id: number;
@@ -630,7 +630,7 @@ class CyberBotContext {
         post_type: "message" | "message_sent";
     } & import("node-napcat-ts/dist/Interfaces.js").MessageType | null> {
         try {
-            const message_id = this.getReplyMessageId(context);
+            const message_id = this.getReplyMessageId(e);
             if (!message_id) return null; // 提前返回无效情况
             logger.info(`Getting quoted message for message ${message_id}`);
             // @onebot11 — 获取信息
@@ -645,14 +645,14 @@ class CyberBotContext {
     }
     /**
      * 从消息上下文中提取所有被@的QQ号
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns 被@的QQ号数组，如果没有找到或出错则返回空数组
      */
-    getMessageAt(context: AllHandlers['message']): number[] {
+    getMessageAt(e: AllHandlers['message']): number[] {
         try {
-            if (!Array.isArray(context.message)) return [];
+            if (!Array.isArray(e.message)) return [];
             logger.info(`Extracting message at from message`);
-            return context.message
+            return e.message
             .filter(item => item.type === "at") // 筛选所有 type 为 "at" 的项
             .map(item => Number(item.data?.qq)) // 提取 qq 字段
             .filter(qq => !isNaN(qq)); // 过滤掉无效数字
@@ -664,14 +664,14 @@ class CyberBotContext {
     }
     /**
      * 从消息上下文中提取纯文本内容
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns 消息中的纯文本内容，如果没有找到文本或出错则返回空字符串
      */
-    getText(context: AllHandlers['message']): string {
+    getText(e: AllHandlers['message']): string {
         try {
-            if (!Array.isArray(context.message)) return "";
+            if (!Array.isArray(e.message)) return "";
             logger.info(`Extracting text from message`);
-            const textObj = context.message.find(item => item.type === "text");
+            const textObj = e.message.find(item => item.type === "text");
             return textObj?.data?.text.trim() || ""; // 返回文本内容或空字符串
         }
         catch (error) {
@@ -681,12 +681,12 @@ class CyberBotContext {
     }
     /**
      * 获取被引用消息的原始文本内容
-     * @param context 消息处理上下文，包含消息内容的数组
+     * @param e 消息处理上下文，包含消息内容的数组
      * @returns Promise<string> 被引用消息的原始文本内容，如果没有找到或出错则返回空字符串
      */
-    async getQuotedText(context: AllHandlers['message']): Promise<string> { 
+    async getQuotedText(e: AllHandlers['message']): Promise<string> { 
         try {
-            const message_id = this.getReplyMessageId(context);
+            const message_id = this.getReplyMessageId(e);
             if (!message_id) return ""; // 提前返回无效情况
             logger.info(`Getting quoted text for message ${message_id}`);
             // @onebot11 — 获取信息
@@ -739,4 +739,4 @@ class CyberBotContext {
     }
 }
 
-export default CyberBotContext
+export default CyberBote
