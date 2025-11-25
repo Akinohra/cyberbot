@@ -1,4 +1,4 @@
-import { type Plugin, events, napcat, logger } from "../../core/index.js";
+import { type Plugin, ctx, napcat, logger } from "../../core/index.js";
 const enableGroups:number[] = [];// 启用的群号
 
 const plugin: Plugin = {
@@ -7,17 +7,17 @@ const plugin: Plugin = {
   description: '点赞',
   
   handlers: {
-    message: async (context) => {
-      if('group_id' in context && !enableGroups.includes(context.group_id)) return;
+    message: async (e) => {
+      if('group_id' in e && !enableGroups.includes(e.group_id)) return;
       const key = ["赞我", "草我", "点赞"];
-      if (key.includes(context.raw_message)) {
+      if (key.includes(e.raw_message)) {
         try {
           await napcat.send_like({
-            user_id: context.sender.user_id,
+            user_id: e.sender.user_id,
             times: 20,
           });
           await napcat.set_msg_emoji_like({
-            message_id: context.message_id,
+            message_id: e.message_id,
             emoji_id: "319",
             set: true
           })
@@ -31,19 +31,19 @@ const plugin: Plugin = {
             "搞定！您的赞已被我承包啦～(～￣▽￣)～",
             "点赞如雨下，专为您而洒٩(๑>◡<๑)۶"
           ];
-          await events.reply(context, events.randomItem(replies))
+          await ctx.reply(e, ctx.randomItem(replies))
         } catch (err) {
           logger.warn(`[-]插件执行出错: ${typeof err}`);
           if ((err as any).message.includes("上限")) {
                 await napcat.set_msg_emoji_like({
-                  message_id: context.message_id,
+                  message_id: e.message_id,
                   emoji_id: "123",
                   set: true
                 })
-            await events.reply(context, "今天赞过了哦, 明天再来吧!(●'◡'●)", true);
+            await ctx.reply(e, "今天赞过了哦, 明天再来吧!(●'◡'●)", true);
           } else {
             logger.warn(`[-]插件执行出错: ${JSON.stringify(err)}`);
-            await events.reply(context, `点赞失败, 原因: ${err}`, true);
+            await ctx.reply(e, `点赞失败, 原因: ${err}`, true);
           }
         }
       }

@@ -7,7 +7,7 @@ import { string2argv as _string2argv } from 'string2argv';
 import _mri from 'mri';
 
 // 事件封装类
-class CyberBotEvents {
+class CyberBotContext {
     private napcat: NCWebsocket
 
     constructor(napcat: NCWebsocket) {
@@ -739,4 +739,4 @@ class CyberBotEvents {
     }
 }
 
-export default CyberBotEvents
+export default CyberBotContext

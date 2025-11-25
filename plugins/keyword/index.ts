@@ -1,4 +1,4 @@
-import { type Plugin, Structs, events, NodeSegment } from "../../core/index.js";
+import { type Plugin, Structs, ctx, NodeSegment } from "../../core/index.js";
 import { isRegexString, isImageUrl, writeConfigToFile, readConfigFromFile } from './helper.js';
 import * as path from 'path';
 
@@ -87,41 +87,41 @@ const plugin: Plugin = {
     description: '关键词插件',
     
     handlers: {
-        message: async (context) => {
-            if (context.raw_message.startsWith("#kw")) {
-                if (!events.hasRight(context.sender.user_id)) return;
+        message: async (e) => {
+            if (e.raw_message.startsWith("#kw")) {
+                if (!ctx.hasRight(e.sender.user_id)) return;
                 
-                const [, command, ...args] = context.raw_message.split(' ');
+                const [, command, ...args] = e.raw_message.split(' ');
                 const restMessage = args.join(' ');
                 
                 switch (command) {
                     case 'on':
-                        if ('group_id' in context && args.length === 0) {
-                            if (!config.enableGroups.includes(context.group_id)) {
-                                config.enableGroups.push(context.group_id);
+                        if ('group_id' in e && args.length === 0) {
+                            if (!config.enableGroups.includes(e.group_id)) {
+                                config.enableGroups.push(e.group_id);
                                 await writeConfigToFile(keyword_path, config);
-                                await events.reply(context, '✅已开启关键词回复');
+                                await ctx.reply(e, '✅已开启关键词回复');
                             } else {
-                                await events.reply(context, '⚠️关键词回复已处于开启状态');
+                                await ctx.reply(e, '⚠️关键词回复已处于开启状态');
                             }
                         }
                         break;
                         
                     case 'off':
-                        if ('group_id' in context && args.length === 0) {
-                            const index = config.enableGroups.indexOf(context.group_id);
+                        if ('group_id' in e && args.length === 0) {
+                            const index = config.enableGroups.indexOf(e.group_id);
                             if (index > -1) {
                                 config.enableGroups.splice(index, 1);
                                 await writeConfigToFile(keyword_path, config);
-                                await events.reply(context, '❎已关闭关键词回复');
+                                await ctx.reply(e, '❎已关闭关键词回复');
                             } else {
-                                await events.reply(context, '⚠️关键词回复已处于关闭状态');
+                                await ctx.reply(e, '⚠️关键词回复已处于关闭状态');
                             }
                         }
                         break;
                         
                     case 'add': {
-                        const { keyword, reply } = parseAddCommand(context.raw_message);
+                        const { keyword, reply } = parseAddCommand(e.raw_message);
                         
                         if (keyword && reply) {
                             try {
@@ -134,12 +134,12 @@ const plugin: Plugin = {
                                 });
                                 
                                 if (existingKeyword) {
-                                    await events.reply(context, `⚠️关键词 "${keyword}" 已存在`);
+                                    await ctx.reply(e, `⚠️关键词 "${keyword}" 已存在`);
                                     break;
                                 }
                                 
-                                const imageUrl = context.message && Array.isArray(context.message) 
-                                    ? context.message.find(segment => segment.type === 'image')?.data?.url || ''
+                                const imageUrl = e.message && Array.isArray(e.message) 
+                                    ? e.message.find(segment => segment.type === 'image')?.data?.url || ''
                                     : '';
                                 
                                 config.keywords.push({
@@ -148,13 +148,13 @@ const plugin: Plugin = {
                                 });
                                 
                                 await writeConfigToFile(keyword_path, config);
-                                await events.reply(context, '✅已添加关键词回复');
+                                await ctx.reply(e, '✅已添加关键词回复');
                             } catch (error) {
                                 console.error('Error adding keyword:', error);
-                                await events.reply(context, '❌添加关键词时发生错误');
+                                await ctx.reply(e, '❌添加关键词时发生错误');
                             }
                         } else {
-                            await events.reply(context, '❌参数错误，请检查关键词和回复内容');
+                            await ctx.reply(e, '❌参数错误，请检查关键词和回复内容');
                         }
                         break;
                     }
@@ -185,9 +185,9 @@ const plugin: Plugin = {
                             if (index > -1) {
                                 config.keywords.splice(index, 1);
                                 await writeConfigToFile(keyword_path, config);
-                                await events.reply(context, '✅已删除关键词回复');
+                                await ctx.reply(e, '✅已删除关键词回复');
                             } else {
-                                await events.reply(context, `⚠️关键词 "${keywordToRemove}" 不存在`);
+                                await ctx.reply(e, `⚠️关键词 "${keywordToRemove}" 不存在`);
                             }
                         }
                         break;
@@ -196,11 +196,11 @@ const plugin: Plugin = {
                     case 'ls':
                         if (args.length === 0) {
                             if (config.keywords.length === 0) {
-                                await events.reply(context, '暂无关键词');
+                                await ctx.reply(e, '暂无关键词');
                                 return;
                             }
                             
-                            const target_id: number = 'group_id' in context ? context.group_id : context.user_id;
+                            const target_id: number = 'group_id' in e ? e.group_id : e.user_id;
                             const forwardmsg: NodeSegment[] = [
                                 {
                                     type: 'node',
@@ -228,16 +228,16 @@ const plugin: Plugin = {
                                 }
                             ];
                             
-                            events.fakeMessage(target_id, forwardmsg, 'group_id' in context);
+                            ctx.fakeMessage(target_id, forwardmsg, 'group_id' in e);
                         }
                         break;
                         
                     default:
-                        await events.reply(context, menus.join('\n'));
+                        await ctx.reply(e, menus.join('\n'));
                 }
             }
             
-            if ('group_id' in context && config.enableGroups.includes(context.group_id)) {
+            if ('group_id' in e && config.enableGroups.includes(e.group_id)) {
                 for (let i = 0; i < config.keywords.length; i++) {
                     const keyword = config.keywords[i];
                     try {
@@ -251,17 +251,17 @@ const plugin: Plugin = {
                             const match = parsedKeyword.match(/^\/(.+)\/([gimsuy]*)$/);
                             if (match) {
                                 const [, pattern, flags] = match;
-                                isMatched = new RegExp(pattern, flags).test(context.raw_message);
+                                isMatched = new RegExp(pattern, flags).test(e.raw_message);
                             }
                         } else {
-                            isMatched = context.raw_message === parsedKeyword;
+                            isMatched = e.raw_message === parsedKeyword;
                         }
                         
                         if (isMatched) {
                             let replyContent;
                             
                             if (isImageUrl(parsedReply)) {
-                                replyContent = [Structs.image(await events.getDynamicDirectLink(parsedReply))];
+                                replyContent = [Structs.image(await ctx.getDynamicDirectLink(parsedReply))];
                             } else if (Array.isArray(parsedReply)) {
                                 replyContent = parsedReply.map((line: string) => Structs.text(line));
                             } else {
@@ -277,7 +277,7 @@ const plugin: Plugin = {
                                 }
                             }
                             
-                            await events.reply(context, replyContent);
+                            await ctx.reply(e, replyContent);
                             return;
                         }
                     } catch (e) {

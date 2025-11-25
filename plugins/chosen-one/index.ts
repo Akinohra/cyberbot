@@ -1,4 +1,4 @@
-import { type Plugin, events, napcat } from "../../core/index.js";
+import { type Plugin, ctx, napcat } from "../../core/index.js";
 import { LRUCache } from 'lru-cache'
 
 const enableGroups: number[] = []; // 启用的群号
@@ -30,10 +30,10 @@ const plugin: Plugin = {
   description: '天选之人',
   
   handlers: {
-    message: async (context) => {
-        if(context.raw_message === '天选之人' && 'group_id' in context && enableGroups.includes(context.group_id)){
+    message: async (e) => {
+        if(e.raw_message === '天选之人' && 'group_id' in e && enableGroups.includes(e.group_id)){
             // 获取发送消息用户的ID
-            const userId = context.user_id;
+            const userId = e.user_id;
             const currentTime = Date.now();
             
             // 检查用户是否在冷却期
@@ -45,7 +45,7 @@ const plugin: Plugin = {
                 if(timeElapsed < COOLDOWN_TIME) {
                   // 计算剩余冷却时间（秒）
                   const remainingTime = Math.ceil((COOLDOWN_TIME - timeElapsed) / 1000);
-                  events.reply(context, `道友刚刚施展过此神通，元气未复，请${remainingTime}秒后再试！`);
+                  ctx.reply(e, `道友刚刚施展过此神通，元气未复，请${remainingTime}秒后再试！`);
                   return;
                 }
               }
@@ -53,21 +53,21 @@ const plugin: Plugin = {
             // 记录用户触发时间
             userCooldownMap.set(userId, currentTime);
             // 原有的天选逻辑
-            const group_member_list = await napcat.get_group_member_list({group_id: context.group_id})
-            const random_item = events.randomItem(group_member_list);
+            const group_member_list = await napcat.get_group_member_list({group_id: e.group_id})
+            const random_item = ctx.randomItem(group_member_list);
             const ban_id = random_item ? random_item.user_id : 0;
-            const isAdmin = await events.isGroupAdmin(context.group_id, ban_id);
-            const isOwner = await events.isGroupOwner(context.group_id, ban_id);
+            const isAdmin = await ctx.isGroupAdmin(e.group_id, ban_id);
+            const isOwner = await ctx.isGroupOwner(e.group_id, ban_id);
             const can_ban = !(isAdmin || isOwner);
-            const ban_random_time = events.randomInt(30, 300)
-            can_ban && await events.ban(context.group_id, ban_id, ban_random_time)
+            const ban_random_time = ctx.randomInt(30, 300)
+            can_ban && await ctx.ban(e.group_id, ban_id, ban_random_time)
             
             // 随机选择一条回复语句
-            const randomMessage = events.randomItem(banMessages)
+            const randomMessage = ctx.randomItem(banMessages)
             .replace('nickname', random_item.card || random_item.nickname)
             .replace('banTime', ban_random_time.toString());
             
-            events.reply(context, randomMessage);
+            ctx.reply(e, randomMessage);
         }
     },
   }

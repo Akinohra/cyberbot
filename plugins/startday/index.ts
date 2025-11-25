@@ -9,7 +9,7 @@ const plugin: Plugin = {
   description: '定时推送晨间新闻的功能',
   
   handlers: {
-    message: (context) => {
+    message: (e) => {
     }
   },
 

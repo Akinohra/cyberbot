@@ -2,7 +2,7 @@ import { NCWebsocket, AllHandlers, Structs, NodeSegment } from 'node-napcat-ts'
 import fs from 'fs'
 import path from 'path'
 import logger from './logger.js'
-import CyberBotEvents from './event.js'
+import CyberBotContext from './event.js'
 
 
 const config = await fs.promises.readFile(path.join(process.cwd(), 'cyberbot.json'), 'utf8')
@@ -20,17 +20,17 @@ const napcat = new NCWebsocket({
 export const bot_uin = cyberconfig.bot
 export const masters = cyberconfig.master
 
-// 创建并配置CyberBotEvents实例
-const cyberBotEvents = new CyberBotEvents(napcat);
+// 创建并配置CyberBotContext实例
+const cyberBotContext = new CyberBotContext(napcat);
 
 // 监听所有消息事件并记录raw_message
-napcat.on('message', (ctx) => {
-  if (ctx.message_type == "group") {
-    logger.info(`[*]群(${ctx.group_id}) ${ctx.sender.nickname}(${ctx.sender.user_id}): ${ctx.raw_message}`);
-} else if (ctx.message_type == "private") {
-    logger.info(`[*]私(${ctx.sender.user_id}) ${ctx.sender.nickname}: ${ctx.raw_message}`);
+napcat.on('message', (e) => {
+  if (e.message_type == "group") {
+    logger.info(`[*]群(${e.group_id}) ${e.sender.nickname}(${e.sender.user_id}): ${e.raw_message}`);
+} else if (e.message_type == "private") {
+    logger.info(`[*]私(${e.sender.user_id}) ${e.sender.nickname}: ${e.raw_message}`);
 }});
 
 export { napcat, NCWebsocket, type AllHandlers, type NodeSegment, Structs, logger }
 export { pluginManager, type Plugin  } from './pluginManager.js';
-export { cyberBotEvents as events }
+export { cyberBotContext as ctx }

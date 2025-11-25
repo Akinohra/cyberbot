@@ -1,4 +1,4 @@
-import { type Plugin, Structs, events } from "../../core/index.js";
+import { type Plugin, Structs, ctx } from "../../core/index.js";
 const enableGroups:number[] = [];// 启用的群号
 
 const plugin: Plugin = {
@@ -7,16 +7,16 @@ const plugin: Plugin = {
   description: '获取直链',
   
   handlers: {
-    message: async (context) => {
-      if('group_id' in context && !enableGroups.includes(context.group_id)) return;
-      if(context.message.some(msg => ['reply', 'at'].includes(msg.type)) && events.getText(context) === '取'){
-          const url = await events.getTemporaryDirectLink(context)
-          events.reply(context, `${url}`);
+    message: async (e) => {
+      if('group_id' in e && !enableGroups.includes(e.group_id)) return;
+      if(e.message.some(msg => ['reply', 'at'].includes(msg.type)) && ctx.getText(e) === '取'){
+          const url = await ctx.getTemporaryDirectLink(e)
+          ctx.reply(e, `${url}`);
       }
-      if(context.message.some(msg => msg.type === 'at') && context.message.some(msg => msg.type === 'text' && msg.data?.text?.trim() === '取头像')){
-          const atqq = context.message.find(msg => msg.type === 'at')?.data?.qq 
+      if(e.message.some(msg => msg.type === 'at') && e.message.some(msg => msg.type === 'text' && msg.data?.text?.trim() === '取头像')){
+          const atqq = e.message.find(msg => msg.type === 'at')?.data?.qq 
           if(!atqq) return;
-          events.reply(context, [Structs.text(events.getQQAvatarLink(Number(atqq), 100)), Structs.image(events.getQQAvatarLink(Number(atqq), 100))])
+          ctx.reply(e, [Structs.text(ctx.getQQAvatarLink(Number(atqq), 100)), Structs.image(ctx.getQQAvatarLink(Number(atqq), 100))])
       }
     },
   }
