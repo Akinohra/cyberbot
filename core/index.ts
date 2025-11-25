@@ -17,11 +17,13 @@ const napcat = new NCWebsocket({
   // ↓ 是否开启 DEBUG 模式
 }, cyberconfig.debug)
 
-// 将登陆号存入全局变量
-// export const bot_uin = await napcat.get_login_info().then(res => res.user_id) //弃用 cyberconfig.bot
-// logger.info(`${bot_uin} welcome to CyberBot`);
-export let bot_uin: number | null = null;
+
+// *弃用 export const bot_uin = cyberconfig.bot *
+// 机器人主人列表
 export const masters = cyberconfig.master
+// 将登陆号存入全局变量
+export let bot_uin: number | null = null;
+// 导出设置机器人登陆号函数
 export function setBotUin(uin: number) {
   bot_uin = uin;
 }

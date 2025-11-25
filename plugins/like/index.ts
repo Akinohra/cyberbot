@@ -1,5 +1,4 @@
 import { type Plugin, ctx, napcat, logger } from "../../core/index.js";
-const enableGroups:number[] = [];// 启用的群号
 
 const plugin: Plugin = {
   name: 'like',  // name必须与此插件文件夹命名一致, 不然可能会出问题
@@ -8,7 +7,6 @@ const plugin: Plugin = {
   
   handlers: {
     message: async (e) => {
-      if('group_id' in e && !enableGroups.includes(e.group_id)) return;
       const key = ["赞我", "草我", "点赞"];
       if (key.includes(e.raw_message)) {
         try {
@@ -21,17 +19,6 @@ const plugin: Plugin = {
             emoji_id: "319",
             set: true
           })
-          const replies = [
-            "已赞！大佬请收下我的膝盖～(￣▽￣～)~",
-            "点赞成功！感觉您的魅力值+10086",
-            "Boom！20个赞已送达，您就是今日最亮的仔✨",
-            "点赞完成～您的帅气/美丽已经突破天际！",
-            "操作成功！这波赞我必须给您点满 (๑•̀ㅂ•́)و✧",
-            "已疯狂点赞！再不回复我都要被您的魅力电到了！",
-            "搞定！您的赞已被我承包啦～(～￣▽￣)～",
-            "点赞如雨下，专为您而洒٩(๑>◡<๑)۶"
-          ];
-          await ctx.reply(e, ctx.randomItem(replies))
         } catch (err) {
           logger.warn(`[-]插件执行出错: ${typeof err}`);
           if ((err as any).message.includes("上限")) {
@@ -40,7 +27,6 @@ const plugin: Plugin = {
                   emoji_id: "123",
                   set: true
                 })
-            await ctx.reply(e, "今天赞过了哦, 明天再来吧!(●'◡'●)", true);
           } else {
             logger.warn(`[-]插件执行出错: ${JSON.stringify(err)}`);
             await ctx.reply(e, `点赞失败, 原因: ${err}`, true);

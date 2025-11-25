@@ -375,14 +375,14 @@ class CyberBote {
      */
     async isGroupAdmin(group_id: number, user_id: number): Promise<boolean> {
         try {
-            logger.info(`Checking if user ${user_id} is admin in group ${group_id}`);
+            // logger.info(`Checking if user ${user_id} is admin in group ${group_id}`);
             // @onebot11 — 获取群成员信息
             // 调用napcat API获取群成员信息
             const info = await this.napcat.get_group_member_info({ group_id, user_id });
             // 判断用户角色是否为管理员('admin')或群主('owner')
             return ['admin', 'owner'].includes(info.role);
         } catch (error) {
-            logger.error(`Failed to check if user ${user_id} is admin in group ${group_id}: ${error}`);
+            // logger.error(`Failed to check if user ${user_id} is admin in group ${group_id}: ${error}`);
             return false;
         }
     }
@@ -498,21 +498,30 @@ class CyberBote {
         return `https://q2.qlogo.cn/headimg_dl?dst_uin=${qq}&spec=${size}`;
     }
     /**
-     * 从消息上下文中提取第一张图片的链接
+     * 获取消息中提及到的图片URL（消息或被引用消息中的图片）
      * @param e 消息处理上下文，包含消息内容的数组
      * @returns Promise<string> 图片链接URL，如果没有找到图片或出错则返回空字符串
      */
     async getImageLink(e: AllHandlers['message']): Promise<string> { 
-        try {
-            if (!Array.isArray(e.message)) return "";
-            logger.info(`Extracting image link from message`);
-            const imageItem = e.message.find(item => item.type === "image");
-            return imageItem?.data?.url.trim() || "";
-        }
-        catch (error) {
-            logger.error(`提取图片链接时发生错误:${error}`);
-            return "";
-        }
+        if (!e || !e.message) return "";
+                try {
+                const reply: any = e.message.find((msg: any) => msg.type === 'reply');
+                if (!reply) return "";
+                const msg = await this.napcat.get_msg({ message_id: reply.data.id });
+
+                for (const segment of msg.message) {
+                    if (segment.type === 'image' && segment.data && segment.data.url) {
+                    return segment.data.url;
+                    }
+                }
+                } catch {
+                for (const segment of e.message) {
+                    if (segment.type === 'image' && segment.data && segment.data.url) {
+                    return segment.data.url;
+                    }
+                }
+                }
+                return "";
     }
     /**
      * 获取URL的动态直链地址，主要用于处理需要rkey验证的图片资源链接
@@ -572,9 +581,9 @@ class CyberBote {
                 message_id: Number(message_id)
             });
             if (!Array.isArray(new_e.message)) return "";
-            logger.info(`Extracting image link from message`);
+            // logger.info(`Extracting image link from message`);
             const imageItem = new_e.message.find(item => item.type === "image");
-            logger.info(`Image item: ${imageItem?.data?.url.trim()}`);
+            // logger.info(`Image item: ${imageItem?.data?.url.trim()}`);
             return imageItem?.data?.url.trim() || "";
         }
         catch (error) {
@@ -590,7 +599,7 @@ class CyberBote {
     getReplyMessageId(e: AllHandlers['message']): string {
         try {
             if (!Array.isArray(e.message)) return "";
-            logger.info(`Extracting reply message ID from message`);
+            // logger.info(`Extracting reply message ID from message`);
             const replyObj = e.message.find(item => item.type === "reply");
             return replyObj?.data?.id.trim() || "";
         }
@@ -599,67 +608,50 @@ class CyberBote {
             return "";
         }
     }
-    async getQuoteMessage(e: AllHandlers['message']): Promise<({
-        message_type: "private";
-        sender: {
-            user_id: number;
-            nickname: string;
-            card: string;
-        };
-        sub_type: "friend";
-    } | {
-        message_type: "group";
-        group_id: number;
-        sender: {
-            user_id: number;
-            nickname: string;
-            card: string;
-            role: "owner" | "admin" | "member";
-        };
-        sub_type: "normal";
-    }) & {
-        self_id: number;
-        user_id: number;
-        time: number;
-        message_id: number;
-        message_seq: number;
-        real_id: number;
-        real_seq: string;
-        raw_message: string;
-        font: number;
-        post_type: "message" | "message_sent";
-    } & import("node-napcat-ts/dist/Interfaces.js").MessageType | null> {
+    /**
+     * 获取被引用的消息详细
+     * @param e 消息处理上下文，包含消息内容的数组
+     * @returns 被引用的消息详细
+     */
+    async getQuoteMessage(e: AllHandlers['message']): Promise<any> {
+        if (!e || !e.message) return null;
         try {
-            const message_id = this.getReplyMessageId(e);
-            if (!message_id) return null; // 提前返回无效情况
-            logger.info(`Getting quoted message for message ${message_id}`);
-            // @onebot11 — 获取信息
-            return this.napcat.get_msg({
-                message_id: Number(message_id)
-            });
-        }
-        catch (error) {
-            logger.error(`提取被引用的文本时发生错误:${error}`);
+            const reply = e.message.find((msg: any) => msg.type === 'reply');
+            if (!reply || !reply.data) return null;
+            
+            // 使用类型断言确保TypeScript知道reply.data有id属性
+            const replyId = (reply.data as { id: string }).id;
+            if (!replyId) return null;
+            
+            const msg = await this.napcat.get_msg({ message_id: Number(replyId) });
+            return msg;
+        } catch (error) {
             return null;
         }
     }
     /**
-     * 从消息上下文中提取所有被@的QQ号
+     * 从消息上下文中提取第一个被@的QQ号
      * @param e 消息处理上下文，包含消息内容的数组
-     * @returns 被@的QQ号数组，如果没有找到或出错则返回空数组
+     * @returns 被@的QQ号，如果没有找到或出错则返回空字符串
      */
-    getMessageAt(e: AllHandlers['message']): number[] {
+    getMessageAt(e: AllHandlers['message']): number | null {
         try {
-            if (!Array.isArray(e.message)) return [];
-            logger.info(`Extracting message at from message`);
-            return e.message
-            .filter(item => item.type === "at") // 筛选所有 type 为 "at" 的项
-            .map(item => Number(item.data?.qq)) // 提取 qq 字段
-            .filter(qq => !isNaN(qq)); // 过滤掉无效数字
-        }
-        catch (error) {
-            logger.error(`提取At对象时发生错误:${error}`);
-            return [];
+            if (!Array.isArray(e.message)) return null;
+            
+            // 查找第一个at类型的消息段
+            const atItem = e.message.find(item => item.type === "at");
+            if (!atItem || !atItem.data) return null;
+            
+            // 使用类型断言来避免TypeScript错误
+            const qqStr = (atItem.data as { qq?: string }).qq;
+            if (!qqStr) return null;
+            
+            // 转换为数字并返回
+            const qq = Number(qqStr);
+            return isNaN(qq) ? null : qq;
+        } catch (error) {
+            logger.error(`提取艾特的QQ号时发生错误:${error}`);
+            return null;
         }
     }
     /**
@@ -670,7 +662,7 @@ class CyberBote {
     getText(e: AllHandlers['message']): string {
         try {
             if (!Array.isArray(e.message)) return "";
-            logger.info(`Extracting text from message`);
+            // logger.info(`Extracting text from message`);
             const textObj = e.message.find(item => item.type === "text");
             return textObj?.data?.text.trim() || ""; // 返回文本内容或空字符串
         }
