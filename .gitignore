@@ -23,9 +23,3 @@ Thumbs.db
 
 # Git files
 .git/
-
-# .claude
-.claude/
-CLAUDE.md
-AGENTS.md
-

@@ -1,4 +1,4 @@
-import { type Plugin, napcat, ctx, pluginManager } from "../../core/index.js";
+import { type Plugin, napcat, events, pluginManager } from "../../core/index.js";
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -20,26 +20,26 @@ const plugin: Plugin = {
   description: 'A cmds plugin that manager commands',
   
   handlers: {
-    message: async (e) => {
-      if(!(await ctx.hasRight(e.user_id))) return;
-      if (e.raw_message === '#状态') {
+    message: async (context) => {
+      if(!(await events.hasRight(context.user_id))) return;
+      if (context.raw_message === '#状态') {
         const statusMessage = await getStatus();
-        ctx.reply(e, statusMessage);
-      } else if (e.raw_message === '#关于') {
+        events.reply(context, statusMessage);
+      } else if (context.raw_message === '#关于') {
         const aboutMessage = await getAbout();
-        ctx.reply(e, aboutMessage);
-      } else if (e.raw_message === '#帮助') {
+        events.reply(context, aboutMessage);
+      } else if (context.raw_message === '#帮助') {
         const helpMessage = await getHelp();
-        ctx.reply(e, helpMessage);
-      } else if (e.raw_message === '#退出') {
-        await ctx.reply(e, '已退出框架进程！');
+        events.reply(context, helpMessage);
+      } else if (context.raw_message === '#退出') {
+        await events.reply(context, '已退出框架进程！');
         await dealExit();
-      } else if (e.raw_message.startsWith('#设置')) {
-        const settings_msg = await settingLogic(e.raw_message);
-        await ctx.reply(e, settings_msg);
-      }else if (e.raw_message.startsWith('#插件')) {
-        const plugins_msg = await pluginsLogic(e.raw_message);
-        await ctx.reply(e, plugins_msg);
+      } else if (context.raw_message.startsWith('#设置')) {
+        const settings_msg = await settingLogic(context.raw_message);
+        await events.reply(context, settings_msg);
+      }else if (context.raw_message.startsWith('#插件')) {
+        const plugins_msg = await pluginsLogic(context.raw_message);
+        await events.reply(context, plugins_msg);
       }
     }
   }
