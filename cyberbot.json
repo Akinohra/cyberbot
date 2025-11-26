@@ -1,6 +1,6 @@
 {
   "baseUrl": "ws://127.0.0.1:3001",
-  "accessToken": "",
+  "accessToken": "123456",
   "throwPromise": false,
   "reconnection": {
     "enable": true,
@@ -8,18 +8,19 @@
     "delay": 5000
   },
   "debug": false,
+  "bot": 123456789,
   "master": [
-    2319289456
+    987654321
   ],
-  "admins": [],
+  "admins": [
+    987654321
+  ],
   "plugins": {
     "system": [
       "cmds"
     ],
     "user": [
-      "demo",
-      "like",
-      "ops"
+      "demo"
     ]
   },
   "loginfo": {

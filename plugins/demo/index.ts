@@ -1,4 +1,4 @@
-import { type Plugin, Structs, ctx, logger, napcat } from "../../core/index.js";
+import { type Plugin, Structs, events, logger, napcat } from "../../core/index.js";
 import axios from 'axios';
 
 const plugin: Plugin = {
@@ -7,60 +7,49 @@ const plugin: Plugin = {
   description: 'A simple plugin that demo using napcat',
   
   handlers: {
-    message: async (e) => {
+    message: async (context) => {
       // 收到 hello 消息时回复 Hi there!
-      if (e.raw_message === 'hello') {
-        const { message_id } = await ctx.reply(e, 'Hi there!', true);
+      if (context.raw_message === 'hello') {
+        const { message_id } = await events.reply(context, 'Hi there!', true);
         //5s撤回
         setTimeout(() => {
-          ctx.delete_msg(message_id)
+          events.delete_msg(message_id)
         }, 5000);
       }
       // 收到 love 消息时回复爱你哟和一个爱心 QQ 表情
-      if (e.raw_message === 'love') {
+      if (context.raw_message === 'love') {
         // 复杂消息消息可以使用数组组合
-        // await e.quick_action([Structs.text('爱你哟 '), Structs.face(66)])
-        await napcat.send_private_msg({
-          user_id: e.sender.user_id,
-          message: [
-            {
-               "type": "text",
-               "data": {
-                  "text": "爱你哟"
-               }
-            }]
-        });
-        // ctx.reply(e, ['爱你哟 ', Structs.face(66)])
+        events.reply(context, ['爱你哟 ', Structs.face(66)])
       }
       // 收到 壁纸 消息时回复今天的 bing 壁纸
-      if (e.raw_message === '壁纸') {
+      if (context.raw_message === '壁纸') {
         // 第一个参数是图片的 URL，第二个参数是是否使用缓存，true 为使用缓存，false 为不使用缓存
-        ctx.reply(e, [Structs.image('https://p2.qpic.cn/gdynamic/m7yRCticIwlKMnXkIat8nNRyD95wf24YNBoiblNYKYdXs/0')])
+        events.reply(context, [Structs.image('https://p2.qpic.cn/gdynamic/m7yRCticIwlKMnXkIat8nNRyD95wf24YNBoiblNYKYdXs/0')])
       }
       // 收到 一言 消息时回复一言
-      if (e.raw_message === '一言') {
+      if (context.raw_message === '一言') {
         const { data } = await axios.get('https://v1.hitokoto.cn/')
-        ctx.reply(e, data.hitokoto)
+        events.reply(context, data.hitokoto)
       }
     },
-    request: async (e) => {
+    request: async (context) => {
       // 处理所有请求：好友、群，添加好友、邀请入群等等
-      console.log('收到请求:', JSON.stringify(e));
+      console.log('收到请求:', JSON.stringify(context));
       // 群组相关请求
-      if (e.request_type === 'group') {
+      if (context.request_type === 'group') {
         // 自动同意群邀请或加群请求
-        await ctx.aprroveGroupJoinRequest(e.flag, true);
+        await events.aprroveGroupJoinRequest(context.flag, true);
         console.log('已自动同意群组请求');
       }
       
       // 好友相关请求可以在这里处理
-      if (e.request_type === 'friend') {
+      if (context.request_type === 'friend') {
         // 处理好友请求
       }
     },
     notice: async (context) => {
       // 处理所有通知：好友、群的数量增加与减少、戳一戳、撤回，以及群的签到、禁言、管理变动、转让等等
-      // console.log('收到通知:', JSON.stringify(context));
+      console.log('收到通知:', JSON.stringify(context));
     },
   },
 
